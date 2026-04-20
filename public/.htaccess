@@ -1,0 +1,8 @@
+Options -Indexes
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Pasa la URL como parámetro GET
+RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]
