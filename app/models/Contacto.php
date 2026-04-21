@@ -68,7 +68,7 @@ class Contacto extends Model
     {
         $sql = "INSERT INTO {$this->tabla}
                     (nombre, apellido, email, direccion, alias, id_categoria)
-                VALUES (?, ?, ?, ?, ?)";
+                VALUES (?, ?, ?, ?, ?, ?)";
 
         $this->db->query($sql, [
             $datos['nombre'],
@@ -140,5 +140,37 @@ class Contacto extends Model
         $like = '%' . $termino . '%';
         return $this->db->query($sql, [$like, $like])->fetchAll();
     }
+
+    //21/04/2026 
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Buscador de contactos por nombre, apellido, alias o email.
+     * Retorna array listo para JSON.
+     */
+    public function buscardorajax(string $termino): array
+    {
+        $sql = "SELECT
+                    c.id,
+                    c.nombre,
+                    c.apellido,
+                    c.email,
+                    c.alias,                     
+                    cat.nombre AS categoria,
+                    cat.color  AS categoria_color
+                FROM contactos c
+                LEFT JOIN categorias cat ON c.id_categoria = cat.id
+                WHERE c.nombre   LIKE ?
+                OR c.apellido LIKE ?
+                OR c.alias    LIKE ?
+                OR c.email    LIKE ?
+                ORDER BY c.apellido, c.nombre";
+
+        $like = '%' . $termino . '%';
+
+        return $this->db
+            ->query($sql, [$like, $like, $like, $like])
+            ->fetchAll();
+    }
+
 }
 ?>

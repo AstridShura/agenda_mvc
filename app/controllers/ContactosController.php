@@ -198,5 +198,37 @@ class ContactosController extends Controller
         $this->contactoModel->eliminar($id);
         $this->redirect('contactos');
     }
+    //21/04/2026
+    // ─────────────────────────────────────────────────────────
+    /**
+     * BUSCAR — Endpoint AJAX para autocompletado
+     * URL: /contactos/buscar?q=juan
+     *
+     * Retorna JSON — no carga ninguna vista
+     */
+    public function buscadorajax(): void
+    {
+        // Solo acepta peticiones AJAX
+        if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+            http_response_code(403);
+            exit();
+        }
+
+        $termino = trim($_GET['q'] ?? '');
+
+        // Mínimo 2 caracteres para buscar
+        if (strlen($termino) < 2) {
+            header('Content-Type: application/json');
+            echo json_encode([]);
+            exit();
+        }
+
+        $resultados = $this->contactoModel->buscar($termino);
+
+        header('Content-Type: application/json');
+        echo json_encode($resultados);
+        exit();
+    }    
 }
 ?>
