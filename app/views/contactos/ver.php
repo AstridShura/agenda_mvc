@@ -48,6 +48,10 @@
                         <td><?= htmlspecialchars($contacto['direccion'] ?? '—') ?></td>
                     </tr>
                     <tr>
+                        <th class="text-muted">Alias</th>
+                        <td><?= htmlspecialchars($contacto['alias'] ?? '—') ?></td>
+                    </tr>                    
+                    <tr>
                         <th class="text-muted">Categoría</th>
                         <td>
                             <?php if ($contacto['categoria']): ?>

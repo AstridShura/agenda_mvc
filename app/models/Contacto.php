@@ -25,6 +25,7 @@ class Contacto extends Model
                     c.nombre,
                     c.apellido,
                     c.email,
+                    c.alias, 
                     c.fecha_alta,
                     cat.nombre   AS categoria,
                     cat.color    AS categoria_color,
@@ -34,7 +35,7 @@ class Contacto extends Model
                 LEFT JOIN telefonos  t   ON c.id = t.id_contacto
                 GROUP BY
                     c.id, c.nombre, c.apellido,
-                    c.email, c.fecha_alta,
+                    c.email, c.alias, c.fecha_alta,
                     cat.nombre, cat.color
                 ORDER BY c.apellido, c.nombre";
 
@@ -66,7 +67,7 @@ class Contacto extends Model
     public function crear(array $datos): int
     {
         $sql = "INSERT INTO {$this->tabla}
-                    (nombre, apellido, email, direccion, id_categoria)
+                    (nombre, apellido, email, direccion, alias, id_categoria)
                 VALUES (?, ?, ?, ?, ?)";
 
         $this->db->query($sql, [
@@ -74,6 +75,7 @@ class Contacto extends Model
             $datos['apellido'],
             $datos['email'],
             $datos['direccion'],
+            $datos['alias'],
             $datos['id_categoria'] ?: null
         ]);
 
@@ -91,6 +93,7 @@ class Contacto extends Model
                     apellido     = ?,
                     email        = ?,
                     direccion    = ?,
+                    alias        = ?,
                     id_categoria = ?
                 WHERE id = ?";
 
@@ -99,6 +102,7 @@ class Contacto extends Model
             $datos['apellido'],
             $datos['email'],
             $datos['direccion'],
+            $datos['alias'],
             $datos['id_categoria'] ?: null,
             $id
         ]);
@@ -124,7 +128,7 @@ class Contacto extends Model
     public function buscar(string $termino): array
     {
         $sql = "SELECT
-                    c.id, c.nombre, c.apellido, c.email,
+                    c.id, c.nombre, c.apellido, c.email, c.alias, 
                     cat.nombre AS categoria,
                     cat.color  AS categoria_color
                 FROM contactos c

@@ -30,6 +30,7 @@
                         <th>Email</th>
                         <th>Categoría</th>
                         <th class="text-center">Teléfonos</th>
+                        <th class="text-center">Alias</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -37,8 +38,7 @@
                 <?php foreach ($contactos as $c): ?>
                     <tr>
                         <td>
-                            <strong><?= htmlspecialchars($c['apellido']) ?>,
-                            <?= htmlspecialchars($c['nombre']) ?></strong>
+                            <strong><?= htmlspecialchars($c['apellido']) ?>, <?= htmlspecialchars($c['nombre']) ?></strong>
                         </td>
                         <td>
                             <?php if ($c['email']): ?>
@@ -65,6 +65,9 @@
                                 <?= $c['total_telefonos'] ?>
                             </span>
                         </td>
+                        <td>
+                            <strong><?= htmlspecialchars($c['alias'] ?? "") ?: " "; ?></strong>
+                        </td>                        
                         <td class="text-center">
                             <!-- Ver -->
                             <a href="<?= BASE_URL ?>/contactos/ver/<?= $c['id'] ?>"
@@ -82,7 +85,7 @@
                             <a href="<?= BASE_URL ?>/contactos/eliminar/<?= $c['id'] ?>"
                                class="btn btn-sm btn-outline-danger btn-action"
                                title="Eliminar"
-                               onclick="return confirm('¿Eliminar este contacto?')">
+                               onclick="return confirm('¿ Esta seguro de eliminar este contacto <?= htmlspecialchars($c['apellido']) ?>, <?= htmlspecialchars($c['nombre']) ?> ?')">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </td>

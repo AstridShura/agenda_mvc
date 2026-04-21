@@ -75,6 +75,7 @@ class ContactosController extends Controller
                 'apellido'     => trim($_POST['apellido'] ?? ''),
                 'email'        => trim($_POST['email'] ?? ''),
                 'direccion'    => trim($_POST['direccion'] ?? ''),
+                'alias'        => trim($_POST['alias'] ?? ''),
                 'id_categoria' => $_POST['id_categoria'] ?? null
             ];
 
@@ -140,6 +141,7 @@ class ContactosController extends Controller
                 'apellido'     => trim($_POST['apellido'] ?? ''),
                 'email'        => trim($_POST['email'] ?? ''),
                 'direccion'    => trim($_POST['direccion'] ?? ''),
+                'alias'        => trim($_POST['alias'] ?? ''),
                 'id_categoria' => $_POST['id_categoria'] ?? null
             ];
 

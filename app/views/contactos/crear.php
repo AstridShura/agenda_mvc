@@ -53,6 +53,12 @@
                        value="<?= htmlspecialchars($datos['direccion'] ?? '') ?>">
             </div>
 
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Alias</label>
+                <input type="text" name="alias" class="form-control"
+                       value="<?= htmlspecialchars($datos['alias'] ?? '') ?>">
+            </div>            
+
             <div class="mb-4">
                 <label class="form-label fw-semibold">Categoría</label>
                 <select name="id_categoria" class="form-select">
