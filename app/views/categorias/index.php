@@ -11,6 +11,41 @@
     </a>
 </div>
 
+<!-- Adicionaremos el buscador dinamico Autocompletable -->
+<!-- Buscador dinámico de Categorias, con IDs propios  -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <div class="position-relative" style="max-width: 450px;">
+            <div class="input-group">
+                <span class="input-group-text bg-white">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+                <input  type="text"
+                        id="inputBuscarCat"
+                        class="form-control border-start-0"
+                        placeholder="Buscar por nombre, apellido, alias o email..."
+                        autocomplete="off">
+                <button class="btn btn-outline-secondary"
+                        id="btnLimpiarCat"
+                        style="display:none"
+                        title="Limpiar búsqueda">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <!-- Resultados del autocompletado -->
+            <div id="resultadosBusquedaCat"
+                 class="position-absolute w-100 bg-white border rounded-2 shadow-sm"
+                 style="display:none; z-index:1000; top:100%; max-height:350px; overflow-y:auto">
+            </div>
+        </div>
+        <small class="text-muted mt-1 d-block">
+            Escribe al menos 2 caracteres para buscar
+        </small>
+    </div>
+</div>
+<!-- Fin buscador dinamico Autocompletable -->
+
 <?php if (empty($categorias)): ?>
 
     <div class="card p-5 text-center text-muted">

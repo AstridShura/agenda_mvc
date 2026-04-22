@@ -150,4 +150,25 @@ class Categoria extends Model
 
         return (int) $result['total'] > 0;
     }
+
+    //22/04/26
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Busca Categorias por nombre, color
+     * Retorna array listo para JSON.
+     */
+    public function buscar(string $termino): array
+    {
+        $sql = "SELECT id, nombre, color 
+                FROM categorias
+                WHERE nombre   LIKE ?
+                   OR color    LIKE ?
+                ORDER BY nombre, color";
+
+        $like = '%' . $termino . '%';
+
+        return $this->db
+            ->query($sql, [$like, $like])
+            ->fetchAll();
+    }    
 }

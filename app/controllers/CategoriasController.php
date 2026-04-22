@@ -239,4 +239,36 @@ class CategoriasController extends Controller
 
         return null; // Sin errores ✅
     }
+    //22/04/26
+    // ─────────────────────────────────────────────────────────
+    /**
+     * BUSCAR — Endpoint AJAX para autocompletado
+     * URL: /categorias/buscadorcat?q=familia
+     *
+     * Retorna JSON — no carga ninguna vista
+     */
+    public function buscadorcat(): void
+    {
+        // Solo acepta peticiones AJAX
+        if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
+            http_response_code(403);
+            exit();
+        }
+
+        $termino = trim($_GET['q'] ?? '');
+
+        // Mínimo 2 caracteres para buscar
+        if (strlen($termino) < 2) {
+            header('Content-Type: application/json');
+            echo json_encode([]);
+            exit();
+        }
+
+        $resultados = $this->categoriaModel->buscar($termino);
+
+        header('Content-Type: application/json');
+        echo json_encode($resultados);
+        exit();
+    }    
 }

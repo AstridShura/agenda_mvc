@@ -300,5 +300,134 @@ document.addEventListener('DOMContentLoaded', function () {
     })();
     </script>
 
+    <!-- 22/04/26-->
+    <!-- Buscador dinámico de Categorias con Autocompletado -->
+    <script>
+    (function () {
+
+        var input      = document.getElementById('inputBuscarCat');
+        var resultados = document.getElementById('resultadosBusquedaCat');
+        var btnLimpiar = document.getElementById('btnLimpiarCat');
+        var tabla      = document.getElementById('tablaCategorias');
+        var timer      = null;
+
+        if (!input) return; // Solo activo en la página de categorías
+
+        input.addEventListener('keyup', function () {
+            var q = input.value.trim();
+
+            clearTimeout(timer);
+            btnLimpiar.style.display = q.length > 0 ? 'block' : 'none';
+
+            if (q.length < 2) {
+                ocultarResultados();
+                mostrarTabla();
+                return;
+            }
+
+            timer = setTimeout(function () {
+                buscar(q);
+            }, 300);
+        });
+
+        btnLimpiar.addEventListener('click', function () {
+            input.value = '';
+            btnLimpiar.style.display = 'none';
+            ocultarResultados();
+            mostrarTabla();
+            input.focus();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!input.contains(e.target) && !resultados.contains(e.target)) {
+                ocultarResultados();
+            }
+        });
+
+        function buscar(q) {
+            resultados.style.display = 'block';
+            resultados.innerHTML =
+                '<div class="p-3 text-center text-muted">' +
+                '<div class="spinner-border spinner-border-sm me-2"></div>' +
+                'Buscando...</div>';
+
+            fetch('<?= BASE_URL ?>/categorias/buscadorcat?q=' + encodeURIComponent(q), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) { pintarResultados(data, q); })
+            .catch(function () { ocultarResultados(); });
+        }
+
+        function pintarResultados(data, q) {
+            if (data.length === 0) {
+                resultados.innerHTML =
+                    '<div class="p-3 text-center text-muted">' +
+                    '<i class="bi bi-tags me-2"></i>' +
+                    'No se encontraron categorías para <strong>' +
+                    escHtml(q) + '</strong></div>';
+                resultados.style.display = 'block';
+                ocultarTabla();
+                return;
+            }
+
+            var html = '';
+            data.forEach(function (c) {
+                html +=
+                    '<a href="<?= BASE_URL ?>/categorias/editar/' + c.id + '" ' +
+                    '   class="d-block px-3 py-2 text-decoration-none text-dark border-bottom">' +
+                    '  <div class="d-flex align-items-center gap-2">' +
+                    '    <span style="display:inline-block;width:20px;height:20px;' +
+                    '          background:' + escHtml(c.color) + ';border-radius:50%;' +
+                    '          border:1px solid #dee2e6;flex-shrink:0"></span>' +
+                    '    <span class="fw-semibold">' + resaltar(escHtml(c.nombre), q) + '</span>' +
+                    '    <code class="ms-auto text-muted" style="font-size:.75rem">' +
+                        escHtml(c.color) + '</code>' +
+                    '  </div>' +
+                    '</a>';
+            });
+
+            html += '<div class="px-3 py-2 bg-light text-muted" style="font-size:.8rem">' +
+                    '<i class="bi bi-info-circle me-1"></i>' +
+                    data.length + ' resultado(s) encontrado(s)</div>';
+
+            resultados.innerHTML = html;
+            resultados.style.display = 'block';
+            ocultarTabla();
+        }
+
+        function resaltar(texto, q) {
+            var regex = new RegExp('(' + escRegex(q) + ')', 'gi');
+            return texto.replace(regex,
+                '<mark class="p-0" style="background:#fff3cd">$1</mark>');
+        }
+
+        function ocultarResultados() {
+            resultados.style.display = 'none';
+            resultados.innerHTML = '';
+        }
+
+        function ocultarTabla() {
+            if (tabla) tabla.style.display = 'none';
+        }
+
+        function mostrarTabla() {
+            if (tabla) tabla.style.display = 'block';
+        }
+
+        function escHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function escRegex(str) {
+            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+    })();
+    </script>
+
 </body>
 </html>
