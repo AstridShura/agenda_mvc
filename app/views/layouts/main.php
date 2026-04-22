@@ -42,13 +42,50 @@
 
 <!-- ── CONTENIDO PRINCIPAL ────────────────────── -->
 <main class="container pb-5">
+
+    <?php
+    // ── Mensaje Flash ─────────────────────────────────────
+    // Inicia sesión si no está activa (necesario en el layout)
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    $flash = Controller::getFlash();
+    if ($flash):
+    ?>
+    <div class="alert alert-<?= $flash['tipo'] ?> alert-dismissible fade show
+                shadow-sm d-flex align-items-center gap-2"
+         role="alert"
+         id="flashMsg">
+
+        <?php
+        $iconos = [
+            'success' => 'bi-check-circle-fill',
+            'danger'  => 'bi-trash-fill',
+            'warning' => 'bi-exclamation-triangle-fill',
+            'info'    => 'bi-pencil-fill',
+        ];
+        $icono = $iconos[$flash['tipo']] ?? 'bi-info-circle-fill';
+        ?>
+
+        <i class="bi <?= $icono ?> fs-5"></i>
+        <span><?= $flash['mensaje'] ?></span>
+
+        <button type="button"
+                class="btn-close ms-auto"
+                data-bs-dismiss="alert"
+                aria-label="Cerrar">
+        </button>
+    </div>
+    <?php endif; ?>
+
     <?= $contenido ?>
+
 </main>
 
 <!-- Bootstrap JS LOCAL -->
 <script src="<?= BASE_URL ?>/assets/js/bootstrap.bundle.min.js"></script>
 
-<!-- Teléfonos dinámicos -->
+<!-- ── Teléfonos dinámicos ────────────────────── -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -79,154 +116,163 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-    <!-- 21/04/codigo JS para buscador Ajax de Contactos -->     
-    <!-- Buscador dinámico con autocompletado -->
-    <script>
-    (function () {
+<!-- ── Buscador dinámico con autocompletado 21/04/26 ── -->
 
-        var input      = document.getElementById('inputBuscar');
-        var resultados = document.getElementById('resultadosBusqueda');
-        var btnLimpiar = document.getElementById('btnLimpiar');
-        var tabla      = document.getElementById('tablaContactos');
-        var timer      = null;
+<script>
+(function () {
 
-        if (!input) return; // Solo activo en páginas con buscador
+    var input      = document.getElementById('inputBuscar');
+    var resultados = document.getElementById('resultadosBusqueda');
+    var btnLimpiar = document.getElementById('btnLimpiar');
+    var tabla      = document.getElementById('tablaContactos');
+    var timer      = null;
 
-        // ── Escucha escritura ──────────────────────────────────
-        input.addEventListener('keyup', function () {
-            var q = input.value.trim();
+    if (!input) return;
 
-            clearTimeout(timer);
-            btnLimpiar.style.display = q.length > 0 ? 'block' : 'none';
+    input.addEventListener('keyup', function () {
+        var q = input.value.trim();
 
-            // Menos de 2 chars → oculta resultados
-            if (q.length < 2) {
-                ocultarResultados();
-                mostrarTabla();
-                return;
-            }
+        clearTimeout(timer);
+        btnLimpiar.style.display = q.length > 0 ? 'block' : 'none';
 
-            // Espera 300ms después de que el usuario deja de escribir
-            timer = setTimeout(function () {
-                buscarajax(q);
-            }, 300);
-        });
-
-        // ── Limpiar búsqueda ───────────────────────────────────
-        btnLimpiar.addEventListener('click', function () {
-            input.value = '';
-            btnLimpiar.style.display = 'none';
+        if (q.length < 2) {
             ocultarResultados();
             mostrarTabla();
-            input.focus();
-        });
+            return;
+        }
 
-        // ── Cerrar al hacer clic afuera ────────────────────────
-        document.addEventListener('click', function (e) {
-            if (!input.contains(e.target) && !resultados.contains(e.target)) {
-                ocultarResultados();
-            }
-        });
+        timer = setTimeout(function () {
+            buscarajax(q);
+        }, 300);
+    });
 
-        // ── Función principal de búsqueda ──────────────────────
-        function buscarajax(q) {
-            // Muestra spinner mientras carga
+    btnLimpiar.addEventListener('click', function () {
+        input.value = '';
+        btnLimpiar.style.display = 'none';
+        ocultarResultados();
+        mostrarTabla();
+        input.focus();
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!input.contains(e.target) && !resultados.contains(e.target)) {
+            ocultarResultados();
+        }
+    });
+
+    function buscarajax(q) {
+        resultados.style.display = 'block';
+        resultados.innerHTML =
+            '<div class="p-3 text-center text-muted">' +
+            '<div class="spinner-border spinner-border-sm me-2"></div>' +
+            'Buscando...</div>';
+
+        fetch('<?= BASE_URL ?>/contactos/buscadorajax?q=' + encodeURIComponent(q), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) { pintarResultados(data, q); })
+        .catch(function ()   { ocultarResultados(); });
+    }
+
+    function pintarResultados(data, q) {
+        if (data.length === 0) {
             resultados.style.display = 'block';
             resultados.innerHTML =
                 '<div class="p-3 text-center text-muted">' +
-                '<div class="spinner-border spinner-border-sm me-2"></div>' +
-                'Buscando...</div>';
-
-            fetch('<?= BASE_URL ?>/contactos/buscadorajax?q=' + encodeURIComponent(q), {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) { pintarResultados(data, q); })
-            .catch(function ()   { ocultarResultados(); });
-        }
-
-        // ── Pinta los resultados en el dropdown ────────────────
-        function pintarResultados(data, q) {
-            if (data.length === 0) {
-                resultados.style.display = 'block';
-                resultados.innerHTML =
-                    '<div class="p-3 text-center text-muted">' +
-                    '<i class="bi bi-person-x me-2"></i>' +
-                    'No se encontraron contactos para <strong>' +
-                    escHtml(q) + '</strong></div>';
-                ocultarTabla();
-                return;
-            }
-
-            var html = '';
-            data.forEach(function (c) {
-                var nombreCompleto = escHtml(c.apellido) + ', ' + escHtml(c.nombre);
-                var alias    = c.alias ? ' <span class="text-muted">(' + escHtml(c.alias) + ')</span>' : '';
-                var email    = c.email ? '<small class="text-muted d-block">' + escHtml(c.email) + '</small>' : '';
-                var catBadge = c.categoria
-                    ? '<span class="badge ms-2" style="background:' + c.categoria_color + ';font-size:.7rem">' +
-                    escHtml(c.categoria) + '</span>'
-                    : '';
-
-                html +=
-                    '<a href="<?= BASE_URL ?>/contactos/ver/' + c.id + '" ' +
-                    '   class="d-block px-3 py-2 text-decoration-none text-dark ' +
-                    '          border-bottom item-resultado">' +
-                    '  <div class="d-flex align-items-center">' +
-                    '    <i class="bi bi-person-circle me-2 text-primary fs-5"></i>' +
-                    '    <div>' +
-                    '      <span class="fw-semibold">' + resaltar(nombreCompleto, q) + '</span>' +
-                        alias + catBadge +
-                        email +
-                    '    </div>' +
-                    '  </div>' +
-                    '</a>';
-            });
-
-            // Pie del dropdown con total
-            html += '<div class="px-3 py-2 bg-light text-muted" style="font-size:.8rem">' +
-                    '<i class="bi bi-info-circle me-1"></i>' +
-                    data.length + ' resultado(s) encontrado(s)' +
-                    '</div>';
-
-            resultados.innerHTML = html;
-            resultados.style.display = 'block';
+                '<i class="bi bi-person-x me-2"></i>' +
+                'No se encontraron contactos para <strong>' +
+                escHtml(q) + '</strong></div>';
             ocultarTabla();
+            return;
         }
 
-        // ── Resalta el término buscado en el texto ─────────────
-        function resaltar(texto, q) {
-            var regex = new RegExp('(' + escRegex(q) + ')', 'gi');
-            return texto.replace(regex,
-                '<mark class="p-0" style="background:#fff3cd">$1</mark>');
-        }
+        var html = '';
+        data.forEach(function (c) {
+            var nombreCompleto = escHtml(c.apellido) + ', ' + escHtml(c.nombre);
+            var email    = c.email
+                ? '<small class="text-muted d-block">' + escHtml(c.email) + '</small>'
+                : '';
+            var alias    = c.alias
+                ? ' <span class="text-muted">(' + escHtml(c.alias) + ')</span>'
+                : '';                
+            var catBadge = c.categoria
+                ? '<span class="badge ms-2" style="background:' +
+                  c.categoria_color + ';font-size:.7rem">' +
+                  escHtml(c.categoria) + '</span>'
+                : '';
 
-        // ── Helpers ────────────────────────────────────────────
-        function ocultarResultados() {
-            resultados.style.display = 'none';
-            resultados.innerHTML = '';
-        }
+            html +=
+                '<a href="<?= BASE_URL ?>/contactos/ver/' + c.id + '" ' +
+                '   class="d-block px-3 py-2 text-decoration-none text-dark ' +
+                '          border-bottom item-resultado">' +
+                '  <div class="d-flex align-items-center">' +
+                '    <i class="bi bi-person-circle me-2 text-primary fs-5"></i>' +
+                '    <div>' +
+                '      <span class="fw-semibold">' + resaltar(nombreCompleto, q) + '</span>' +
+                       alias + catBadge + email +
+                '    </div>' +
+                '  </div>' +
+                '</a>';
+        });
 
-        function ocultarTabla() {
-            if (tabla) tabla.style.display = 'none';
-        }
+        html += '<div class="px-3 py-2 bg-light text-muted" style="font-size:.8rem">' +
+                '<i class="bi bi-info-circle me-1"></i>' +
+                data.length + ' resultado(s) encontrado(s)</div>';
 
-        function mostrarTabla() {
-            if (tabla) tabla.style.display = 'block';
-        }
+        resultados.innerHTML = html;
+        resultados.style.display = 'block';
+        ocultarTabla();
+    }
 
-        function escHtml(str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-                .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        }
+    function resaltar(texto, q) {
+        var regex = new RegExp('(' + escRegex(q) + ')', 'gi');
+        return texto.replace(regex,
+            '<mark class="p-0" style="background:#fff3cd">$1</mark>');
+    }
 
-        function escRegex(str) {
-            return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        }
+    function ocultarResultados() {
+        resultados.style.display = 'none';
+        resultados.innerHTML = '';
+    }
 
-    })();
-    </script>
+    function ocultarTabla() {
+        if (tabla) tabla.style.display = 'none';
+    }
+
+    function mostrarTabla() {
+        if (tabla) tabla.style.display = 'block';
+    }
+
+    function escHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function escRegex(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+})();
+</script>
+
+<!-- ── Auto-cierre del mensaje flash ─────────── -->
+<script>
+(function () {
+    var flash = document.getElementById('flashMsg');
+    if (!flash) return;
+
+    setTimeout(function () {
+        flash.classList.remove('show');
+        flash.classList.add('fade');
+        setTimeout(function () {
+            flash.style.display = 'none';
+        }, 300);
+    }, 4000);
+})();
+</script>
+
 </body>
 </html>

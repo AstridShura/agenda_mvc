@@ -11,6 +11,15 @@
 
 class Controller
 {
+
+    public function __construct()
+    {
+        // Inicia sesión si no está activa
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+    }
+
     // ─────────────────────────────────────────────────────────
     /**
      * Carga y renderiza una Vista.
@@ -33,12 +42,10 @@ class Controller
             die("<h3>Vista no encontrada: <code>{$view}.php</code></h3>");
         }
 
-        // 1. Captura el HTML de la vista en una variable
         ob_start();
         require_once $viewFile;
         $contenido = ob_get_clean();
 
-        // 2. Inyecta $contenido dentro del layout
         $layoutFile = ROOT_PATH . '/app/views/layouts/main.php';
         require_once $layoutFile;
     }
@@ -62,9 +69,9 @@ class Controller
         if (file_exists($modelFile)) {
             require_once $modelFile;
             return new $model();
-        } else {
-            die("<h3>Modelo no encontrado: <code>{$model}.php</code></h3>");
         }
+
+        die("<h3>Modelo no encontrado: <code>{$model}.php</code></h3>");
     }
 
     // ─────────────────────────────────────────────────────────
@@ -80,6 +87,49 @@ class Controller
     {
         header('Location: ' . BASE_URL . '/' . $url);
         exit();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Guarda un mensaje flash en SESSION.
+     *
+     * Uso en cualquier Controller hijo:
+     *   $this->flash('success', 'Contacto creado correctamente.');
+     *   $this->flash('danger',  'Error al eliminar el contacto.');
+     *   $this->flash('warning', 'No se encontraron resultados.');
+     *   $this->flash('info',    'No hubo cambios que guardar.');
+     *
+     * Tipos Bootstrap válidos:
+     *   success | danger | warning | info
+     */
+    protected function flash(string $tipo, string $mensaje): void
+    {
+        $_SESSION['flash'] = [
+            'tipo'    => $tipo,
+            'mensaje' => $mensaje
+        ];
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Lee y borra el mensaje flash de SESSION.
+     * Retorna null si no hay mensaje pendiente.
+     *
+     * Se llama SOLO desde el layout main.php
+     */
+    public static function getFlash(): ?array
+    {
+        if (!isset($_SESSION['flash'])) {
+            return null;
+        }
+
+        // Lee el mensaje
+        $flash = $_SESSION['flash'];
+
+        // Lo borra inmediatamente — solo se muestra UNA vez
+        unset($_SESSION['flash']);
+
+        return $flash;
     }
 }
 ?>
