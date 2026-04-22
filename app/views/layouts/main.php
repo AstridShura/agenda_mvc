@@ -36,6 +36,12 @@
             <a class="nav-link text-white ms-2" href="<?= BASE_URL ?>/contactos/crear">
                 <i class="bi bi-person-plus me-1"></i>Nuevo
             </a>
+           <!-- Opcion adicionada 22/04/26-->
+                <!-- ── Enlace nuevo ── -->
+            <a class="nav-link text-white ms-2" href="<?= BASE_URL ?>/categorias">
+                <i class="bi bi-tags me-1"></i>Categorías
+            </a>
+
         </div>
     </div>
 </nav>
@@ -273,6 +279,26 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 4000);
 })();
 </script>
+
+<!-- 22/04/26 Adicionado para controlar Color Picker -->
+<!-- Color picker — preview en tiempo real -->
+    <script>
+    (function () {
+        var picker  = document.getElementById('colorPicker');
+        var hex     = document.getElementById('colorHex');
+        var preview = document.getElementById('previewBadge');
+        var nombre  = document.getElementById('nombreInput');
+
+        if (!picker) return; // Solo activo en páginas de categorías
+
+        // Actualiza el HEX y el preview cuando cambia el color
+        picker.addEventListener('input', function () {
+            var color = picker.value;
+            if (hex)     hex.value              = color;
+            if (preview) preview.style.background = color;
+        });
+    })();
+    </script>
 
 </body>
 </html>
