@@ -65,6 +65,9 @@
                         <option value="admin" <?= $usuario['rol'] === 'admin' ? 'selected' : '' ?>>
                             Administrador
                         </option>
+                        <option value="sistemas" <?= $usuario['rol'] === 'sistemas' ? 'selected' : '' ?>>
+                            Sistemas
+                        </option>                        
                     </select>
                 </div>
                 <div class="col-md-6">

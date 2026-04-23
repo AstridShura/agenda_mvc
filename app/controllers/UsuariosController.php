@@ -117,7 +117,7 @@ class UsuariosController extends Controller
             ];
 
             // ── 2. Validar campos obligatorios ──────────────
-            if (empty($datos['nombre']) || empty($datos['apellido']) || empty($datos['email'])|| empty($datos['usuario'])|| empty($datos['password'])|| empty($datos['rol'])|| empty($datos['activo'])) {
+            if (empty($datos['nombre']) || empty($datos['apellido']) || empty($datos['email'])|| empty($datos['usuario'])|| empty($datos['password'])) {
                 // Recarga el formulario con el error y los datos
                 // que ya había escrito el usuario
                 $this->view('usuarios/crear', [

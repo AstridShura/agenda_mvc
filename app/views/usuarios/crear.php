@@ -64,6 +64,9 @@
                         <option value="admin" <?= ($datos['rol'] ?? '') === 'admin' ? 'selected' : '' ?>>
                             Administrador
                         </option>
+                        <option value="sistemas" <?= ($datos['rol'] ?? '') === 'sistemas' ? 'selected' : '' ?>>
+                            Sistemas
+                        </option>                        
                     </select>
                 </div>
                 <div class="col-md-6">
