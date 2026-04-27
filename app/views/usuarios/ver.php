@@ -52,7 +52,7 @@
                         <!-- NUNCA mostrar el hash — solo indicar que existe -->
                         <td>
                             <span class="text-muted">••••••••</span>
-                            <a href="<?= BASE_URL ?>/usuarios/cambiarPassword/<?= $usuario['id'] ?>"
+                            <a href="<?= BASE_URL ?>/usuarios/cambiarpassword/<?= $usuario['id'] ?>"
                             class="btn btn-sm btn-outline-secondary ms-2">
                                 <i class="bi bi-key me-1"></i>Cambiar
                             </a>

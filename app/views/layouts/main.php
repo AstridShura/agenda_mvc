@@ -47,27 +47,59 @@
         <a class="navbar-brand fw-bold" href="<?= BASE_URL ?>/contactos">
             <i class="bi bi-journal-text me-2"></i>Agenda MVC
         </a>
-        <div class="navbar-nav ms-auto">
-            <a class="nav-link text-white" href="<?= BASE_URL ?>/contactos">
-                <i class="bi bi-people me-1"></i>Contactos
-            </a>
-            <a class="nav-link text-white ms-2" href="<?= BASE_URL ?>/contactos/crear">
-                <i class="bi bi-person-plus me-1"></i>Nuevo
-            </a>
-           <!-- Opcion adicionada 22/04/26-->
-                <!-- ── Enlace nuevo ── -->
-            <a class="nav-link text-white ms-2" href="<?= BASE_URL ?>/categorias">
-                <i class="bi bi-tags me-1"></i>Categorías
-            </a>
-           <!-- Opcion adicionada 23/04/26-->
-                <!-- ── Enlace nuevo ── -->
-            <a class="nav-link text-white ms-2" href="<?= BASE_URL ?>/usuarios">
-                <i class="bi bi-tags me-1"></i>Usuarios
-            </a>
-            <!-- Agregado 27/04/26 para Citas-->            
-            <a class="nav-link text-white ms-2" href="<?= BASE_URL ?>/citas">
-                <i class="bi bi-calendar2-week me-1"></i>Citas
-            </a>
+
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMenu">
+            <!-- Links izquierda -->
+            <div class="navbar-nav me-auto">
+                <a class="nav-link text-white" href="<?= BASE_URL ?>/contactos">
+                    <i class="bi bi-people me-1"></i>Contactos
+                </a>
+                <a class="nav-link text-white" href="<?= BASE_URL ?>/categorias">
+                    <i class="bi bi-tags me-1"></i>Categorías
+                </a>
+                <a class="nav-link text-white" href="<?= BASE_URL ?>/citas">
+                    <i class="bi bi-calendar2-week me-1"></i>Citas
+                </a>
+                <a class="nav-link text-white" href="<?= BASE_URL ?>/usuarios">
+                    <i class="bi bi-people-fill me-1"></i>Usuarios
+                </a>
+            </div>
+
+            <!-- Usuario autenticado — derecha -->
+            <div class="navbar-nav ms-auto">
+                <?php
+                // Muestra el nombre del usuario autenticado
+                $nombreSesion = $_SESSION['usuario_nombre'] ?? 'Usuario';
+                $rolSesion    = $_SESSION['usuario_rol']    ?? 'usuario';
+                ?>
+                <span class="nav-link text-white-50 d-flex align-items-center gap-2">
+                    <i class="bi bi-person-circle"></i>
+                    <span>
+                        <?= htmlspecialchars($nombreSesion) ?>
+                        <small class="badge bg-secondary ms-1">
+                            <?= htmlspecialchars($rolSesion) ?>
+                        </small>
+                    </span>
+                </span>
+
+                <!-- Botón Nuevo Contacto -->
+                <a class="nav-link text-white" href="<?= BASE_URL ?>/contactos/crear">
+                    <i class="bi bi-person-plus me-1"></i>Nuevo
+                </a>
+
+                <!-- Logout -->
+                <a class="nav-link text-danger fw-semibold"
+                   href="<?= BASE_URL ?>/auth/logout"
+                   onclick="return confirm('¿Cerrar sesión?')">
+                    <i class="bi bi-box-arrow-right me-1"></i>Salir
+                </a>
+            </div>
         </div>
     </div>
 </nav>

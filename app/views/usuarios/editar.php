@@ -50,7 +50,7 @@
             <div class="alert alert-info py-2 mb-3">
                 <i class="bi bi-info-circle me-2"></i>
                 El password se cambia desde
-                <a href="<?= BASE_URL ?>/usuarios/cambiarPassword/<?= $usuario['id'] ?>">
+                <a href="<?= BASE_URL ?>/usuarios/cambiarpassword/<?= $usuario['id'] ?>">
                     aquí
                 </a>.
             </div>

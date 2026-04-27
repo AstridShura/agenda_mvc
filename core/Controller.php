@@ -1,37 +1,70 @@
 <?php
 
-/**
- * ============================================================
- * CLASE BASE — Controller
- * ============================================================
- * Todos los controllers de la app heredan de esta clase.
- * Provee métodos comunes como cargar vistas y modelos.
- * ============================================================
- */
-
 class Controller
 {
-
+    // ─────────────────────────────────────────────────────────
     public function __construct()
     {
-        // Inicia sesión si no está activa
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
+        }
+        //Habilitacion para control de sesiones y autenticacion 27/04/26 
+        $this->verificarSesion();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * VERIFICAR SESIÓN
+     * ──────────────────
+     * Se ejecuta en cada petición.
+     * Usa get_class($this) para saber qué controller
+     * está siendo instanciado en este momento.
+     *
+     * Si es AuthController → dejar pasar sin verificar.
+     * Si no hay SESSION   → redirigir al login.
+     */
+    private function verificarSesion(): void
+    {
+        // Controllers que NO requieren autenticación
+        $rutasPublicas = ['AuthController'];
+
+        // get_class($this) retorna el nombre real
+        // del controller hijo que está ejecutándose
+        // Ej: 'ContactosController', 'AuthController'
+        $controllerActual = get_class($this);
+
+        // Si es ruta pública → dejar pasar
+        if (in_array($controllerActual, $rutasPublicas)) {
+            return;
+        }
+
+        // Si no hay sesión activa → redirect al login
+        if (!isset($_SESSION['usuario_id'])) {
+            header('Location: ' . BASE_URL . '/auth/login');
+            exit();
         }
     }
 
     // ─────────────────────────────────────────────────────────
     /**
-     * Carga y renderiza una Vista.
-     *
-     * Uso desde un Controller hijo:
-     *   $this->view('contactos/index', ['contactos' => $data]);
-     *
-     * @param string $view   Ruta relativa a /app/views/
-     * @param array  $data   Variables que estarán disponibles en la vista
+     * Retorna datos del usuario autenticado desde SESSION.
+     * Disponible en todos los controllers hijos.
      */
+    protected function usuarioActual(): array
+    {
+        return [
+            'id'     => $_SESSION['usuario_id']     ?? null,
+            'nombre' => $_SESSION['usuario_nombre'] ?? '',
+            'rol'    => $_SESSION['usuario_rol']    ?? 'usuario',
+        ];
+    }
 
-
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Carga y renderiza una Vista dentro del layout.
+     * ob_start() captura el HTML de la vista
+     * y lo inyecta en $contenido del layout.
+     */
     protected function view(string $view, array $data = []): void
     {
         extract($data);
@@ -52,15 +85,7 @@ class Controller
 
     // ─────────────────────────────────────────────────────────
     /**
-     * Carga e instancia un Modelo.
-     *
-     * Uso desde un Controller hijo:
-     *   $this->model('Contacto');
-     *   → carga /app/models/Contacto.php
-     *   → retorna instancia de la clase Contacto
-     *
-     * @param  string $model  Nombre de la clase Model
-     * @return object         Instancia del modelo
+     * Carga e instancia un Model.
      */
     protected function model(string $model): object
     {
@@ -76,12 +101,7 @@ class Controller
 
     // ─────────────────────────────────────────────────────────
     /**
-     * Redirecciona a otra URL de la app.
-     *
-     * Uso:
-     *   $this->redirect('contactos/index');
-     *
-     * @param string $url  Ruta relativa desde BASE_URL
+     * Redirecciona a una URL relativa a BASE_URL.
      */
     protected function redirect(string $url): void
     {
@@ -92,15 +112,7 @@ class Controller
     // ─────────────────────────────────────────────────────────
     /**
      * Guarda un mensaje flash en SESSION.
-     *
-     * Uso en cualquier Controller hijo:
-     *   $this->flash('success', 'Contacto creado correctamente.');
-     *   $this->flash('danger',  'Error al eliminar el contacto.');
-     *   $this->flash('warning', 'No se encontraron resultados.');
-     *   $this->flash('info',    'No hubo cambios que guardar.');
-     *
-     * Tipos Bootstrap válidos:
-     *   success | danger | warning | info
+     * tipos: success | danger | warning | info
      */
     protected function flash(string $tipo, string $mensaje): void
     {
@@ -112,24 +124,16 @@ class Controller
 
     // ─────────────────────────────────────────────────────────
     /**
-     * Lee y borra el mensaje flash de SESSION.
-     * Retorna null si no hay mensaje pendiente.
-     *
-     * Se llama SOLO desde el layout main.php
+     * Lee y borra el flash de SESSION.
+     * Solo se muestra UNA vez.
      */
     public static function getFlash(): ?array
     {
         if (!isset($_SESSION['flash'])) {
             return null;
         }
-
-        // Lee el mensaje
         $flash = $_SESSION['flash'];
-
-        // Lo borra inmediatamente — solo se muestra UNA vez
         unset($_SESSION['flash']);
-
         return $flash;
     }
 }
-?>

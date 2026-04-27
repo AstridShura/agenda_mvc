@@ -41,6 +41,26 @@ class Usuario extends Model
 
     // ─────────────────────────────────────────────────────────
     /**
+     * Busca un usuario por su email. 27/04/26
+     * Usado por AuthController para el login.
+     * Retorna false si no existe.
+     *
+     * @param  string $email
+     * @return array|false
+     */
+    public function getByEmail(string $email): array|false
+    {
+        return $this->db->query(
+            "SELECT id, nombre, apellido, email,
+                    password, rol, activo
+            FROM {$this->tabla}
+            WHERE email = ?",
+            [$email]
+        )->fetch();
+    }    
+
+    // ─────────────────────────────────────────────────────────
+    /**
      * Crea un nuevo usuario.
      * Retorna el ID del registro insertado.
      */
@@ -140,6 +160,28 @@ class Usuario extends Model
         return $this->db
             ->query($sql, [$like, $like, $like, $like])
             ->fetchAll();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Actualiza el password de un usuario.
+     * SIEMPRE aplica hash BCRYPT antes de guardar.
+     * NUNCA guarda texto plano en la BD.
+     *
+     * @param int    $id    ID del usuario
+     * @param string $nuevo Password nuevo en texto plano
+     */
+    public function cambiarpassword(int $id, string $nuevo): void
+    {
+        $this->db->query(
+            "UPDATE {$this->tabla}
+            SET password = ?
+            WHERE id     = ?",
+            [
+                password_hash($nuevo, PASSWORD_BCRYPT),
+                $id
+            ]
+        );
     }
 
 }
