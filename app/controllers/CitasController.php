@@ -236,21 +236,15 @@ class CitasController extends Controller
 
     // ─────────────────────────────────────────────────────────
     /**
-     * CALENDARIO — Endpoint AJAX para FullCalendar
+     * CALENDARIO — Endpoint JSON para FullCalendar
      * URL: GET /citas/calendario
      *
-     * FullCalendar hace fetch() a esta URL para
-     * obtener los eventos en formato JSON.
-     * Retorna array de eventos con colores por estado.
+     * NO valida X-Requested-With porque FullCalendar
+     * no envía ese header en sus peticiones fetch().
+     * Retorna array de eventos en formato FullCalendar.
      */
     public function calendario(): void
     {
-        if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) ||
-            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) !== 'xmlhttprequest') {
-            http_response_code(403);
-            exit();
-        }
-
         $eventos = $this->citaModel->getParaCalendario();
 
         header('Content-Type: application/json');

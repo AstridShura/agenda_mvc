@@ -131,8 +131,7 @@ class Cita extends Model
 
         foreach ($citas as $cita) {
             // Formato fecha para FullCalendar: YYYY-MM-DDTHH:MM
-            $inicio = $cita['fecha_cita'] . 'T' .
-                      substr($cita['hora_inicio'], 0, 5);
+            $inicio = $cita['fecha_cita'] . 'T' . substr($cita['hora_inicio'], 0, 5);
 
             $fin = $cita['hora_fin']
                 ? $cita['fecha_cita'] . 'T' . substr($cita['hora_fin'], 0, 5)
