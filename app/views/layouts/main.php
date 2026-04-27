@@ -20,6 +20,24 @@
                       display:inline-flex; align-items:center;
                       justify-content:center; }
     </style>
+
+    <!-- Agregado para Citas -->
+    <!-- Flatpickr — date/time picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- TomSelect — buscador de contactos en select -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css">
+    <!-- FullCalendar -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css">
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
+<!-- TomSelect JS -->
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
 </head>
 <body>
 
@@ -45,6 +63,10 @@
                 <!-- ── Enlace nuevo ── -->
             <a class="nav-link text-white ms-2" href="<?= BASE_URL ?>/usuarios">
                 <i class="bi bi-tags me-1"></i>Usuarios
+            </a>
+            <!-- Agregado 27/04/26 para Citas-->            
+            <a class="nav-link text-white ms-2" href="<?= BASE_URL ?>/citas">
+                <i class="bi bi-calendar2-week me-1"></i>Citas
             </a>
         </div>
     </div>
@@ -562,6 +584,252 @@ document.addEventListener('DOMContentLoaded', function () {
 
     })();
     </script>
+    
+    <!-- Para Citas 27/04/26-->
+    <!-- ── Citas: Flatpickr + TomSelect + FullCalendar ── -->
+    <script>
+    (function () {
 
+        // ── Flatpickr — selector de fecha ─────────────────────
+        var fechas = document.querySelectorAll('.flatpickr-fecha');
+        fechas.forEach(function (el) {
+            flatpickr(el, {
+                locale      : 'es',
+                dateFormat  : 'Y-m-d',
+                altInput    : true,
+                altFormat   : 'd/m/Y',
+                minDate     : 'today',
+                allowInput  : false
+            });
+        });
+
+        // ── Flatpickr — selector de hora ──────────────────────
+        var horas = document.querySelectorAll('.flatpickr-hora');
+        horas.forEach(function (el) {
+            flatpickr(el, {
+                enableTime  : true,
+                noCalendar  : true,
+                dateFormat  : 'H:i',
+                time_24hr   : true,
+                minuteIncrement: 15,
+                allowInput  : false
+            });
+        });
+
+        // ── TomSelect — selector de contactos ─────────────────
+        var selectContacto = document.getElementById('selectContacto');
+        if (selectContacto) {
+            new TomSelect(selectContacto, {
+                placeholder : 'Buscar contacto...',
+                allowEmptyOption: true
+            });
+        }
+
+        // ── Toggle Tabla / Calendario ─────────────────────────
+        window.mostrarVista = function (vista) {
+            var tabla      = document.getElementById('vistaTbla');
+            var calendario = document.getElementById('vistaCalendario');
+            var btnTabla   = document.getElementById('btnVistTabla');
+            var btnCal     = document.getElementById('btnVistaCalendario');
+
+            if (!tabla) return;
+
+            if (vista === 'tabla') {
+                tabla.style.display      = 'block';
+                calendario.style.display = 'none';
+                btnTabla.classList.add('active');
+                btnCal.classList.remove('active');
+            } else {
+                tabla.style.display      = 'none';
+                calendario.style.display = 'block';
+                btnTabla.classList.remove('active');
+                btnCal.classList.add('active');
+                iniciarCalendario();
+            }
+        };
+
+        // ── FullCalendar ──────────────────────────────────────
+        var calendarObj = null;
+
+        function iniciarCalendario() {
+            var el = document.getElementById('calendarioCitas');
+            if (!el) return;
+
+            // Solo inicializar una vez
+            if (calendarObj) {
+                calendarObj.render();
+                return;
+            }
+
+            calendarObj = new FullCalendar.Calendar(el, {
+                initialView  : 'dayGridMonth',
+                locale       : 'es',
+                headerToolbar: {
+                    left  : 'prev,next today',
+                    center: 'title',
+                    right : 'dayGridMonth,timeGridWeek,listWeek'
+                },
+                height       : 650,
+                // Carga eventos via AJAX desde /citas/calendario
+                events: {
+                    url    : '<?= BASE_URL ?>/citas/calendario',
+                    method : 'GET',
+                    extraParams: {},
+                    failure: function () {
+                        alert('Error cargando el calendario.');
+                    },
+                    // Agrega el header AJAX requerido
+                    success: function (data) { return data; }
+                },
+                // Al hacer clic en un evento → ver la cita
+                eventClick: function (info) {
+                    info.jsEvent.preventDefault();
+                    var url = info.event.extendedProps.url;
+                    if (url) window.location.href = '<?= BASE_URL ?>' + url;
+                },
+                // Tooltip al pasar el mouse
+                eventMouseEnter: function (info) {
+                    var props = info.event.extendedProps;
+                    info.el.setAttribute('title',
+                        props.contacto + ' | ' + props.tipo + ' | ' + props.estado
+                    );
+                }
+            });
+
+            calendarObj.render();
+        }
+
+        // ── Tabs de filtro por estado ─────────────────────────
+        var tabs = document.querySelectorAll('#tabsEstado .nav-link');
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function (e) {
+                e.preventDefault();
+                tabs.forEach(function (t) { t.classList.remove('active'); });
+                this.classList.add('active');
+
+                var estado = this.getAttribute('data-estado');
+                var filas  = document.querySelectorAll('#tablaCitas tbody tr');
+
+                filas.forEach(function (fila) {
+                    if (estado === 'todas' || fila.getAttribute('data-estado') === estado) {
+                        fila.style.display = '';
+                    } else {
+                        fila.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // ── Buscador AJAX de citas ────────────────────────────
+        var inputCita  = document.getElementById('inputBuscarCita');
+        var resCita    = document.getElementById('resultadosBusquedaCita');
+        var btnLimCita = document.getElementById('btnLimpiarCita');
+        var timerCita  = null;
+
+        if (!inputCita) return;
+
+        inputCita.addEventListener('keyup', function () {
+            var q = inputCita.value.trim();
+            clearTimeout(timerCita);
+            btnLimCita.style.display = q.length > 0 ? 'block' : 'none';
+
+            if (q.length < 2) {
+                resCita.style.display = 'none';
+                return;
+            }
+
+            timerCita = setTimeout(function () {
+                buscarCita(q);
+            }, 300);
+        });
+
+        btnLimCita.addEventListener('click', function () {
+            inputCita.value = '';
+            btnLimCita.style.display = 'none';
+            resCita.style.display    = 'none';
+            resCita.innerHTML        = '';
+            inputCita.focus();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (inputCita && !inputCita.contains(e.target) &&
+                resCita   && !resCita.contains(e.target)) {
+                resCita.style.display = 'none';
+            }
+        });
+
+        function buscarCita(q) {
+            resCita.style.display = 'block';
+            resCita.innerHTML =
+                '<div class="p-3 text-center text-muted">' +
+                '<div class="spinner-border spinner-border-sm me-2"></div>' +
+                'Buscando...</div>';
+
+            fetch('<?= BASE_URL ?>/citas/buscadorcitas?q=' + encodeURIComponent(q), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) { pintarCitas(data, q); })
+            .catch(function () { resCita.style.display = 'none'; });
+        }
+
+        function pintarCitas(data, q) {
+            if (data.length === 0) {
+                resCita.innerHTML =
+                    '<div class="p-3 text-center text-muted">' +
+                    '<i class="bi bi-calendar-x me-2"></i>' +
+                    'No se encontraron citas para <strong>' + escH(q) + '</strong></div>';
+                resCita.style.display = 'block';
+                return;
+            }
+
+            var colores = {Pendiente:'warning', Confirmada:'success', Cancelada:'danger'};
+            var html = '';
+
+            data.forEach(function (c) {
+                var fecha = c.fecha_cita ? c.fecha_cita.substring(0,10) : '';
+                html +=
+                    '<a href="<?= BASE_URL ?>/citas/ver/' + c.id + '" ' +
+                    '   class="d-block px-3 py-2 text-decoration-none text-dark border-bottom">' +
+                    '  <div class="d-flex align-items-center gap-2">' +
+                    '    <i class="bi bi-calendar3 text-primary"></i>' +
+                    '    <div class="flex-grow-1">' +
+                    '      <span class="fw-semibold">' + resH(escH(c.titulo), q) + '</span>' +
+                    '      <small class="text-muted d-block">' +
+                            escH(c.contacto_nombre) + ' ' + escH(c.contacto_apellido) +
+                    '        · ' + fecha +
+                    '      </small>' +
+                    '    </div>' +
+                    '    <span class="badge bg-' + (colores[c.estado] || 'secondary') + '">' +
+                        escH(c.estado) +
+                    '    </span>' +
+                    '  </div>' +
+                    '</a>';
+            });
+
+            html += '<div class="px-3 py-2 bg-light text-muted" style="font-size:.8rem">' +
+                    data.length + ' resultado(s)</div>';
+
+            resCita.innerHTML     = html;
+            resCita.style.display = 'block';
+        }
+
+        function resH(t, q) {
+            return t.replace(new RegExp('(' + escR(q) + ')', 'gi'),
+                '<mark class="p-0" style="background:#fff3cd">$1</mark>');
+        }
+
+        function escH(s) {
+            if (!s) return '';
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function escR(s) {
+            return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+    })();
+    </script>
 </body>
 </html>

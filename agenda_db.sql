@@ -1,0 +1,227 @@
+USE [master]
+GO
+/****** Objeto: Database [agenda_db] Fecha de script: 27/04/2026 9:28:57 ******/
+CREATE DATABASE [agenda_db]
+ CONTAINMENT = NONE
+ ON  PRIMARY 
+( NAME = N'agenda_db', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\agenda_db.mdf' , SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
+ LOG ON 
+( NAME = N'agenda_db_log', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\agenda_db_log.ldf' , SIZE = 8192KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
+ WITH CATALOG_COLLATION = DATABASE_DEFAULT, LEDGER = OFF
+GO
+ALTER DATABASE [agenda_db] SET COMPATIBILITY_LEVEL = 160
+GO
+IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
+begin
+EXEC [agenda_db].[dbo].[sp_fulltext_database] @action = 'enable'
+end
+GO
+ALTER DATABASE [agenda_db] SET ANSI_NULL_DEFAULT OFF 
+GO
+ALTER DATABASE [agenda_db] SET ANSI_NULLS OFF 
+GO
+ALTER DATABASE [agenda_db] SET ANSI_PADDING OFF 
+GO
+ALTER DATABASE [agenda_db] SET ANSI_WARNINGS OFF 
+GO
+ALTER DATABASE [agenda_db] SET ARITHABORT OFF 
+GO
+ALTER DATABASE [agenda_db] SET AUTO_CLOSE OFF 
+GO
+ALTER DATABASE [agenda_db] SET AUTO_SHRINK OFF 
+GO
+ALTER DATABASE [agenda_db] SET AUTO_UPDATE_STATISTICS ON 
+GO
+ALTER DATABASE [agenda_db] SET CURSOR_CLOSE_ON_COMMIT OFF 
+GO
+ALTER DATABASE [agenda_db] SET CURSOR_DEFAULT  GLOBAL 
+GO
+ALTER DATABASE [agenda_db] SET CONCAT_NULL_YIELDS_NULL OFF 
+GO
+ALTER DATABASE [agenda_db] SET NUMERIC_ROUNDABORT OFF 
+GO
+ALTER DATABASE [agenda_db] SET QUOTED_IDENTIFIER OFF 
+GO
+ALTER DATABASE [agenda_db] SET RECURSIVE_TRIGGERS OFF 
+GO
+ALTER DATABASE [agenda_db] SET  DISABLE_BROKER 
+GO
+ALTER DATABASE [agenda_db] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
+GO
+ALTER DATABASE [agenda_db] SET DATE_CORRELATION_OPTIMIZATION OFF 
+GO
+ALTER DATABASE [agenda_db] SET TRUSTWORTHY OFF 
+GO
+ALTER DATABASE [agenda_db] SET ALLOW_SNAPSHOT_ISOLATION OFF 
+GO
+ALTER DATABASE [agenda_db] SET PARAMETERIZATION SIMPLE 
+GO
+ALTER DATABASE [agenda_db] SET READ_COMMITTED_SNAPSHOT OFF 
+GO
+ALTER DATABASE [agenda_db] SET HONOR_BROKER_PRIORITY OFF 
+GO
+ALTER DATABASE [agenda_db] SET RECOVERY FULL 
+GO
+ALTER DATABASE [agenda_db] SET  MULTI_USER 
+GO
+ALTER DATABASE [agenda_db] SET PAGE_VERIFY CHECKSUM  
+GO
+ALTER DATABASE [agenda_db] SET DB_CHAINING OFF 
+GO
+ALTER DATABASE [agenda_db] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
+GO
+ALTER DATABASE [agenda_db] SET TARGET_RECOVERY_TIME = 60 SECONDS 
+GO
+ALTER DATABASE [agenda_db] SET DELAYED_DURABILITY = DISABLED 
+GO
+ALTER DATABASE [agenda_db] SET ACCELERATED_DATABASE_RECOVERY = OFF  
+GO
+EXEC sys.sp_db_vardecimal_storage_format N'agenda_db', N'ON'
+GO
+ALTER DATABASE [agenda_db] SET QUERY_STORE = ON
+GO
+ALTER DATABASE [agenda_db] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEANUP_POLICY = (STALE_QUERY_THRESHOLD_DAYS = 30), DATA_FLUSH_INTERVAL_SECONDS = 900, INTERVAL_LENGTH_MINUTES = 60, MAX_STORAGE_SIZE_MB = 1000, QUERY_CAPTURE_MODE = AUTO, SIZE_BASED_CLEANUP_MODE = AUTO, MAX_PLANS_PER_QUERY = 200, WAIT_STATS_CAPTURE_MODE = ON)
+GO
+USE [agenda_db]
+GO
+/****** Objeto: Table [dbo].[categorias] Fecha de script: 27/04/2026 9:28:57 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[categorias](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[nombre] [varchar](50) NOT NULL,
+	[color] [varchar](7) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[citas] Fecha de script: 27/04/2026 9:28:58 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[citas](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[id_contacto] [int] NOT NULL,
+	[titulo] [varchar](150) NOT NULL,
+	[descripcion] [varchar](500) NULL,
+	[fecha_cita] [date] NOT NULL,
+	[hora_inicio] [time](7) NOT NULL,
+	[hora_fin] [time](7) NULL,
+	[tipo] [varchar](30) NOT NULL,
+	[estado] [varchar](20) NOT NULL,
+	[fecha_alta] [datetime] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[contactos] Fecha de script: 27/04/2026 9:28:58 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[contactos](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[nombre] [varchar](100) NOT NULL,
+	[apellido] [varchar](100) NOT NULL,
+	[email] [varchar](150) NULL,
+	[direccion] [varchar](250) NULL,
+	[id_categoria] [int] NULL,
+	[fecha_alta] [datetime] NOT NULL,
+	[alias] [varchar](50) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[telefonos] Fecha de script: 27/04/2026 9:28:58 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[telefonos](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[id_contacto] [int] NOT NULL,
+	[numero] [varchar](20) NOT NULL,
+	[tipo] [varchar](20) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Objeto: Table [dbo].[usuarios] Fecha de script: 27/04/2026 9:28:58 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[usuarios](
+	[id] [int] IDENTITY(1,1) NOT NULL,
+	[nombre] [varchar](100) NOT NULL,
+	[apellido] [varchar](100) NOT NULL,
+	[email] [varchar](150) NOT NULL,
+	[usuario] [varchar](50) NOT NULL,
+	[password] [varchar](255) NOT NULL,
+	[rol] [varchar](20) NOT NULL,
+	[activo] [bit] NOT NULL,
+	[fecha_alta] [datetime] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[usuario] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[email] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[categorias] ADD  DEFAULT ('#6c757d') FOR [color]
+GO
+ALTER TABLE [dbo].[citas] ADD  DEFAULT ('Reunion') FOR [tipo]
+GO
+ALTER TABLE [dbo].[citas] ADD  DEFAULT ('Pendiente') FOR [estado]
+GO
+ALTER TABLE [dbo].[citas] ADD  DEFAULT (getdate()) FOR [fecha_alta]
+GO
+ALTER TABLE [dbo].[contactos] ADD  DEFAULT (getdate()) FOR [fecha_alta]
+GO
+ALTER TABLE [dbo].[telefonos] ADD  DEFAULT ('Personal') FOR [tipo]
+GO
+ALTER TABLE [dbo].[usuarios] ADD  DEFAULT ('usuario') FOR [rol]
+GO
+ALTER TABLE [dbo].[usuarios] ADD  DEFAULT ((1)) FOR [activo]
+GO
+ALTER TABLE [dbo].[usuarios] ADD  DEFAULT (getdate()) FOR [fecha_alta]
+GO
+ALTER TABLE [dbo].[citas]  WITH CHECK ADD  CONSTRAINT [fk_cita_contacto] FOREIGN KEY([id_contacto])
+REFERENCES [dbo].[contactos] ([id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[citas] CHECK CONSTRAINT [fk_cita_contacto]
+GO
+ALTER TABLE [dbo].[contactos]  WITH CHECK ADD  CONSTRAINT [fk_contacto_categoria] FOREIGN KEY([id_categoria])
+REFERENCES [dbo].[categorias] ([id])
+GO
+ALTER TABLE [dbo].[contactos] CHECK CONSTRAINT [fk_contacto_categoria]
+GO
+ALTER TABLE [dbo].[telefonos]  WITH CHECK ADD  CONSTRAINT [fk_telefono_contacto] FOREIGN KEY([id_contacto])
+REFERENCES [dbo].[contactos] ([id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[telefonos] CHECK CONSTRAINT [fk_telefono_contacto]
+GO
+USE [master]
+GO
+ALTER DATABASE [agenda_db] SET  READ_WRITE 
+GO
