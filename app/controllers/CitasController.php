@@ -307,4 +307,65 @@ class CitasController extends Controller
         }
         return null;
     }
+
+    //28/04/26 Metodos para Exportador
+    // ─────────────────────────────────────────────────────────
+    /**
+     * EXPORTAR EXCEL — Todas las citas
+     * ─────────────────────────────────
+     * URL: GET /citas/exportarexcel
+     *
+     * Exporta TODAS las citas con datos del contacto.
+     * Incluye: título, contacto, fecha, horario,
+     *          tipo, estado y descripción.
+     */
+    public function exportarexcel(): void
+    {
+        $citas = $this->citaModel->getAll();
+
+        Exportador::excel(
+            $citas,
+            [
+                'titulo'            => 'Título',
+                'contacto_apellido' => 'Apellido Contacto',
+                'contacto_nombre'   => 'Nombre Contacto',
+                'fecha_cita'        => 'Fecha',
+                'hora_inicio'       => 'Hora Inicio',
+                'hora_fin'          => 'Hora Fin',
+                'tipo'              => 'Tipo',
+                'estado'            => 'Estado',
+                'descripcion'       => 'Descripción',
+            ],
+            'Listado de Citas — Agenda MVC',
+            'citas_' . date('Ymd_His')
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * EXPORTAR PDF — Todas las citas
+     * ────────────────────────────────
+     * URL: GET /citas/exportarpdf
+     */
+    public function exportarpdf(): void
+    {
+        $citas = $this->citaModel->getAll();
+
+        Exportador::pdf(
+            $citas,
+            [
+                'titulo'            => 'Título',
+                'contacto_apellido' => 'Apellido',
+                'contacto_nombre'   => 'Nombre',
+                'fecha_cita'        => 'Fecha',
+                'hora_inicio'       => 'Hora Ini',
+                'hora_fin'          => 'Hora Fin',
+                'tipo'              => 'Tipo',
+                'estado'            => 'Estado',
+            ],
+            'Listado de Citas — Agenda MVC',
+            'citas_' . date('Ymd_His')
+        );
+    }
+    
 }

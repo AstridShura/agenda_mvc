@@ -18,21 +18,44 @@ $iconosTipo = [
     <h2 class="fw-bold mb-0">
         <i class="bi bi-calendar2-week-fill me-2 text-primary"></i><?= $titulo ?>
     </h2>
-    <div class="d-flex gap-2">
-        <!-- Toggle Vista -->
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-outline-primary active"
-                    id="btnVistTabla" onclick="mostrarVista('tabla')">
+    <div class="d-flex gap-2 flex-wrap">
+
+        <!-- Toggle Tabla / Calendario -->
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button"
+                    class="btn btn-outline-primary active"
+                    id="btnVistTabla"
+                    onclick="mostrarVista('tabla')">
                 <i class="bi bi-list-ul me-1"></i>Tabla
             </button>
-            <button type="button" class="btn btn-outline-primary"
-                    id="btnVistaCalendario" onclick="mostrarVista('calendario')">
+            <button type="button"
+                    class="btn btn-outline-primary"
+                    id="btnVistaCalendario"
+                    onclick="mostrarVista('calendario')">
                 <i class="bi bi-calendar3 me-1"></i>Calendario
             </button>
         </div>
-        <a href="<?= BASE_URL ?>/citas/crear" class="btn btn-primary">
+
+        <!-- Exportar Excel -->
+        <a href="<?= BASE_URL ?>/citas/exportarexcel"
+           class="btn btn-success btn-sm"
+           title="Descargar listado en Excel">
+            <i class="bi bi-file-earmark-excel me-1"></i>Excel
+        </a>
+
+        <!-- Exportar PDF -->
+        <a href="<?= BASE_URL ?>/citas/exportarpdf"
+           class="btn btn-danger btn-sm"
+           title="Descargar listado en PDF">
+            <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+        </a>
+
+        <!-- Nueva Cita -->
+        <a href="<?= BASE_URL ?>/citas/crear"
+           class="btn btn-primary btn-sm">
             <i class="bi bi-plus-circle me-1"></i>Nueva Cita
         </a>
+
     </div>
 </div>
 

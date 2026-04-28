@@ -363,4 +363,63 @@ class ContactosController extends Controller
         echo json_encode($resultados);
         exit();
     }
+
+    //28/04/26 Para Exportador 
+    // ─────────────────────────────────────────────────────────
+    /**
+     * EXPORTAR EXCEL — Todos los contactos
+     * ───────────────────────────────────────
+     * URL: GET /contactos/exportarexcel
+     *
+     * Exporta TODOS los contactos sin paginación.
+     * Incluye: nombre, apellido, alias, email,
+     *          categoría, teléfonos y fecha de alta.
+     */
+    public function exportarexcel(): void
+    {
+        // Obtiene TODOS — sin paginación
+        $contactos = $this->contactoModel->getAll();
+
+        Exportador::excel(
+            $contactos,
+            [
+                'apellido'        => 'Apellido',
+                'nombre'          => 'Nombre',
+                'alias'           => 'Alias',
+                'email'           => 'Email',
+                'categoria'       => 'Categoría',
+                'total_telefonos' => 'Nº Teléfonos',
+                'fecha_alta'      => 'Fecha Alta',
+            ],
+            'Listado de Contactos — Agenda MVC',
+            'contactos_' . date('Ymd_His')
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * EXPORTAR PDF — Todos los contactos
+     * ────────────────────────────────────
+     * URL: GET /contactos/exportarpdf
+     */
+    public function exportarpdf(): void
+    {
+        $contactos = $this->contactoModel->getAll();
+
+        Exportador::pdf(
+            $contactos,
+            [
+                'apellido'        => 'Apellido',
+                'nombre'          => 'Nombre',
+                'alias'           => 'Alias',
+                'email'           => 'Email',
+                'categoria'       => 'Categoría',
+                'total_telefonos' => 'Teléfonos',
+                'fecha_alta'      => 'Fecha Alta',
+            ],
+            'Listado de Contactos — Agenda MVC',
+            'contactos_' . date('Ymd_His')
+        );
+    }    
+
 }

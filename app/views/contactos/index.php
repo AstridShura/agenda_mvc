@@ -6,9 +6,29 @@
     <h2 class="fw-bold mb-0">
         <i class="bi bi-people-fill me-2 text-primary"></i><?= $titulo ?>
     </h2>
-    <a href="<?= BASE_URL ?>/contactos/crear" class="btn btn-primary">
-        <i class="bi bi-person-plus me-1"></i> Nuevo Contacto
-    </a>
+    <div class="d-flex gap-2 flex-wrap">
+
+        <!-- Exportar Excel -->
+        <a href="<?= BASE_URL ?>/contactos/exportarexcel"
+           class="btn btn-success btn-sm"
+           title="Descargar listado en Excel">
+            <i class="bi bi-file-earmark-excel me-1"></i>Excel
+        </a>
+
+        <!-- Exportar PDF -->
+        <a href="<?= BASE_URL ?>/contactos/exportarpdf"
+           class="btn btn-danger btn-sm"
+           title="Descargar listado en PDF">
+            <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+        </a>
+
+        <!-- Nuevo Contacto -->
+        <a href="<?= BASE_URL ?>/contactos/crear"
+           class="btn btn-primary btn-sm">
+            <i class="bi bi-person-plus me-1"></i>Nuevo Contacto
+        </a>
+
+    </div>
 </div>
 
 <!-- ── Buscador dinámico ───────────────────────────────── -->

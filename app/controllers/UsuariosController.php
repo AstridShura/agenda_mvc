@@ -312,4 +312,59 @@ class UsuariosController extends Controller
         echo json_encode($resultados);
         exit();
     }
+
+    //28/04/26 Para Exportador 
+    // ─────────────────────────────────────────────────────────
+    /**
+     * EXPORTAR EXCEL — Todos los usuarios
+     * ───────────────────────────────────────
+     * URL: GET /usuarios/exportarexcel
+     *
+     * Exporta TODOS los usuarios sin paginación.
+     * Incluye: nombre, apellido, alias, email,
+     *          categoría, teléfonos y fecha de alta.
+     */
+    public function exportarexcel(): void
+    {
+        // Obtiene TODOS — sin paginación
+        $usuarios = $this->usuarioModel->getAll();
+
+        Exportador::excel(
+            $usuarios,
+            [
+                'nombre'          => 'Nombre',            
+                'apellido'        => 'Apellido',
+                'email'           => 'Email',
+                'usuario'         => 'Usuario',
+                'rol'             => 'Rol',
+            ],
+            'Listado de Usuarios — Agenda MVC',
+            'usuarios_' . date('Ymd_His')
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * EXPORTAR PDF — Todos los usuarios
+     * ────────────────────────────────────
+     * URL: GET /usuarios/exportarpdf
+     */
+    public function exportarpdf(): void
+    {
+        $usuarios = $this->usuarioModel->getAll();
+
+        Exportador::pdf(
+            $usuarios,
+            [
+                'nombre'          => 'Nombre',            
+                'apellido'        => 'Apellido',
+                'email'           => 'Email',
+                'usuario'         => 'Usuario',
+                'rol'             => 'Rol',
+            ],
+            'Listado de Usuarios — Agenda MVC',
+            'usuarios_' . date('Ymd_His')
+        );
+    }        
+
 }

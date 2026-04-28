@@ -4,11 +4,31 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold mb-0">
-        <i class="bi bi-person-square me-2 text-primary"></i><?= $titulo ?>
+        <i class="bi bi-people-fill me-2 text-primary"></i><?= $titulo ?>
     </h2>
-    <a href="<?= BASE_URL ?>/usuarios/crear" class="btn btn-primary">
-        <i class="bi bi-person-plus me-1"></i> Nuevo Usuario
-    </a>
+    <div class="d-flex gap-2 flex-wrap">
+
+        <!-- Exportar Excel -->
+        <a href="<?= BASE_URL ?>/usuarios/exportarexcel"
+           class="btn btn-success btn-sm"
+           title="Descargar listado en Excel">
+            <i class="bi bi-file-earmark-excel me-1"></i>Excel
+        </a>
+
+        <!-- Exportar PDF -->
+        <a href="<?= BASE_URL ?>/usuarios/exportarpdf"
+           class="btn btn-danger btn-sm"
+           title="Descargar listado en PDF">
+            <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+        </a>
+
+        <!-- Nuevo Usuario -->
+        <a href="<?= BASE_URL ?>/usuarios/crear"
+           class="btn btn-primary btn-sm">
+            <i class="bi bi-person-plus me-1"></i>Nuevo Usuario
+        </a>
+
+    </div>
 </div>
 
 <!-- ── Buscador dinámico ───────────────────────────────── -->
