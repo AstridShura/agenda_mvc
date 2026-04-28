@@ -152,15 +152,15 @@ $iconosTipo = [
                         <tr data-estado="<?= $c['estado'] ?>">
                             <td>
                                 <strong><?= htmlspecialchars($c['titulo']) ?></strong>
-                                <?php if ($c['descripcion']): ?>
+                                <?php if ($c['titulo']): ?>
                                     <br><small class="text-muted">
-                                        <?= htmlspecialchars(substr($c['descripcion'], 0, 50)) ?>
-                                        <?= strlen($c['descripcion']) > 50 ? '...' : '' ?>
+                                        <?= htmlspecialchars(substr($c['titulo'], 0, 50)) ?>
+                                        <?= strlen($c['titulo']) > 50 ? '...' : '' ?>
                                     </small>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <a href="<?= BASE_URL ?>/contactos/ver/<?= $c['id_contacto'] ?>"
+                                <a href="<?= BASE_URL ?>/citas/ver/<?= $c['id_contacto'] ?>"
                                    class="text-decoration-none">
                                     <i class="bi bi-person me-1 text-muted"></i>
                                     <?= htmlspecialchars($c['contacto_apellido']) ?>,
@@ -236,6 +236,11 @@ $iconosTipo = [
                 </table>
             </div>
         </div>
+
+    <!-- 28/04/26 Se adiciono para mostrar el paginador -->
+    <!-- ── Paginador ───────────────────────────────── -->
+    <?= $paginador->renderizar(BASE_URL . '/citas') ?>  
+
     <?php endif; ?>
 </div>
 

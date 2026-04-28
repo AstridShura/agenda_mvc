@@ -33,16 +33,35 @@ class CitasController extends Controller
 
     // ─────────────────────────────────────────────────────────
     /**
-     * INDEX — Lista + Calendario
-     * URL: GET /citas
+     * INDEX — Lista todos los Citas
+     * ─────────────────────────────────
+     * URL    : GET /citas
+     * Vista  : app/views/citas/index.php
      *
-     * Pasa las citas a la vista para la tabla.
-     * FullCalendar carga sus eventos via AJAX
-     * llamando a /citas/calendario
+     * Obtiene todos los citas con su categoría y
+     * los pasa a la vista para
+     * mostrarlos en una tabla con acciones CRUD.
+     * Ademas en fecha 28/04/26 se agrego para el paginador
      */
     public function index(): void
     {
-        $citas = $this->citaModel->getAll();
+        // Lee porpagina de la URL — default 5
+        // Valida que sea una opción permitida
+        $opcionesValidas = [5, 15, 50];
+        $porPagina       = (int) ($_GET['porpagina'] ?? 5);
+
+        if (!in_array($porPagina, $opcionesValidas)) {
+            $porPagina = 5;
+        }
+
+        $paginaActual = (int) ($_GET['pagina'] ?? 1);
+        $total        = $this->citaModel->contarTodos();
+        $paginador    = new Paginador($total, $porPagina, $paginaActual);
+
+        $citas = $this->citaModel->getAllPaginado(
+            $paginador->getPorPagina(),
+            $paginador->getOffset()
+        );
 
         // Conteo por estado para los badges del tab
         $conteos = [
@@ -54,11 +73,12 @@ class CitasController extends Controller
         foreach ($citas as $c) {
             $conteos[$c['estado']]++;
         }
-
+                
         $this->view('citas/index', [
-            'titulo'  => 'Citas',
-            'citas'   => $citas,
-            'conteos' => $conteos
+            'titulo'    => 'Citas',
+            'citas' => $citas,
+            'paginador' => $paginador,
+            'conteos'   => $conteos
         ]);
     }
 

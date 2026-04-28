@@ -282,4 +282,53 @@ class Cita extends Model
         $like = '%' . $termino . '%';
         return $this->db->query($sql, [$like, $like, $like])->fetchAll();
     }
+
+    //28/04/26 Para paginador de Citas
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Cuenta el total de citass en BD.
+     * Usado por el Paginador para calcular páginas.
+     */
+    public function contarTodos(): int
+    {
+        $result = $this->db->query(
+            "SELECT COUNT(*) AS total FROM {$this->tabla}"
+        )->fetch();
+
+        return (int) $result['total'];
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Retorna citas paginadas.
+     * Usa OFFSET/FETCH NEXT — sintaxis de SQL Server.
+     *
+     * @param  int $limite  Registros por página
+     * @param  int $offset  Desde qué registro empezar
+     * @return array
+     */
+    public function getAllPaginado(int $limite, int $offset): array
+    {
+        $sql = "SELECT
+                    ci.id,
+                    ci.titulo,
+                    ci.fecha_cita,
+                    ci.hora_inicio, 
+                    ci.hora_fin, 
+                    ci.tipo,
+                    ci.estado,
+                    co.id AS id_contacto, 
+                    co.nombre   AS contacto_nombre,
+                    co.apellido AS contacto_apellido
+                FROM {$this->tabla} ci
+                INNER JOIN contactos co ON ci.id_contacto = co.id 
+                ORDER BY ci.titulo, co.nombre 
+                OFFSET " . (int)$offset . " ROWS
+                FETCH NEXT " . (int)$limite . " ROWS ONLY";
+
+        // Sin parámetros PDO para OFFSET/FETCH
+        // Los valores van directamente en la query como enteros
+        return $this->db->query($sql)->fetchAll();
+    }
+
 }
