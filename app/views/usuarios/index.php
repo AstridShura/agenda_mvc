@@ -131,4 +131,8 @@
             </table>
         </div>
     </div>
+    <!-- 27/04/26 Se adiciono para mostrar el paginador -->
+    <!-- ── Paginador ───────────────────────────────── -->
+    <?= $paginador->renderizar(BASE_URL . '/usuarios') ?>    
+    
 <?php endif; ?>

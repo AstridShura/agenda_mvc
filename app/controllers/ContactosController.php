@@ -50,14 +50,32 @@ class ContactosController extends Controller
      * Obtiene todos los contactos con su categoría y
      * cantidad de teléfonos, los pasa a la vista para
      * mostrarlos en una tabla con acciones CRUD.
+     * Ademas en fecha 27/04/26 se agrego para el paginador
      */
     public function index(): void
     {
-        $contactos = $this->contactoModel->getAll();
+        // Lee porpagina de la URL — default 5
+        // Valida que sea una opción permitida
+        $opcionesValidas = [5, 15, 50];
+        $porPagina       = (int) ($_GET['porpagina'] ?? 5);
+
+        if (!in_array($porPagina, $opcionesValidas)) {
+            $porPagina = 5;
+        }
+
+        $paginaActual = (int) ($_GET['pagina'] ?? 1);
+        $total        = $this->contactoModel->contarTodos();
+        $paginador    = new Paginador($total, $porPagina, $paginaActual);
+
+        $contactos = $this->contactoModel->getAllPaginado(
+            $paginador->getPorPagina(),
+            $paginador->getOffset()
+        );
 
         $this->view('contactos/index', [
             'titulo'    => 'Mi Agenda',
-            'contactos' => $contactos
+            'contactos' => $contactos,
+            'paginador' => $paginador
         ]);
     }
 
@@ -346,4 +364,3 @@ class ContactosController extends Controller
         exit();
     }
 }
-?>

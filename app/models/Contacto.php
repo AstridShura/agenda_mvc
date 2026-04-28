@@ -172,5 +172,55 @@ class Contacto extends Model
             ->fetchAll();
     }
 
+    //27/04/26 PAra paginador
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Cuenta el total de contactos en BD.
+     * Usado por el Paginador para calcular páginas.
+     */
+    public function contarTodos(): int
+    {
+        $result = $this->db->query(
+            "SELECT COUNT(*) AS total FROM {$this->tabla}"
+        )->fetch();
+
+        return (int) $result['total'];
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Retorna contactos paginados.
+     * Usa OFFSET/FETCH NEXT — sintaxis de SQL Server.
+     *
+     * @param  int $limite  Registros por página
+     * @param  int $offset  Desde qué registro empezar
+     * @return array
+     */
+    public function getAllPaginado(int $limite, int $offset): array
+    {
+        $sql = "SELECT
+                    c.id,
+                    c.nombre,
+                    c.apellido,
+                    c.alias,
+                    c.email,
+                    c.fecha_alta,
+                    cat.nombre  AS categoria,
+                    cat.color   AS categoria_color,
+                    COUNT(t.id) AS total_telefonos
+                FROM contactos c
+                LEFT JOIN categorias cat ON c.id_categoria = cat.id
+                LEFT JOIN telefonos  t   ON c.id = t.id_contacto
+                GROUP BY
+                    c.id, c.nombre, c.apellido, c.alias,
+                    c.email, c.fecha_alta,
+                    cat.nombre, cat.color
+                ORDER BY c.apellido, c.nombre
+                OFFSET " . (int)$offset . " ROWS
+                FETCH NEXT " . (int)$limite . " ROWS ONLY";
+
+        // Sin parámetros PDO para OFFSET/FETCH
+        // Los valores van directamente en la query como enteros
+        return $this->db->query($sql)->fetchAll();
+    }
 }
-?>

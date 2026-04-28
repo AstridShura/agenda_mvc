@@ -183,5 +183,39 @@ class Usuario extends Model
             ]
         );
     }
+    //Para Paginador 27/04/26
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Cuenta el total de usuarios en BD.
+     */
+    public function contarTodos(): int
+    {
+        $result = $this->db->query(
+            "SELECT COUNT(*) AS total FROM {$this->tabla}"
+        )->fetch();
 
+        return (int) $result['total'];
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Retorna usuarios paginados.
+     * OFFSET/FETCH NEXT es la sintaxis correcta en SQL Server.
+     *
+     * @param  int $limite  Registros por página
+     * @param  int $offset  Desde qué registro empezar
+     * @return array
+     */
+    public function getAllPaginado(int $limite, int $offset): array
+    {
+        $sql = "SELECT
+                    id, nombre, apellido, email,
+                    usuario, rol, activo, fecha_alta
+                FROM {$this->tabla}
+                ORDER BY nombre, apellido
+                OFFSET " . (int)$offset . " ROWS
+                FETCH NEXT " . (int)$limite . " ROWS ONLY";
+
+        return $this->db->query($sql)->fetchAll();
+    }
 }

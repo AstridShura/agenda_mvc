@@ -41,14 +41,30 @@ class UsuariosController extends Controller
     /**
      * INDEX — Lista todos los usuarios
      * URL: GET /usuarios
+     * En fecha 27/04/26 se adiciono para soportar paginacion de Usuarios
      */
     public function index(): void
     {
-        $usuarios = $this->usuarioModel->getAll();
+        $opcionesValidas = [5, 15, 50];
+        $porPagina       = (int) ($_GET['porpagina'] ?? 5);
+
+        if (!in_array($porPagina, $opcionesValidas)) {
+            $porPagina = 5;
+        }
+
+        $paginaActual = (int) ($_GET['pagina'] ?? 1);
+        $total        = $this->usuarioModel->contarTodos();
+        $paginador    = new Paginador($total, $porPagina, $paginaActual);
+
+        $usuarios = $this->usuarioModel->getAllPaginado(
+            $paginador->getPorPagina(),
+            $paginador->getOffset()
+        );
 
         $this->view('usuarios/index', [
-            'titulo'   => 'Mis usuarios',
-            'usuarios' => $usuarios
+            'titulo'    => 'Mis Usuarios',
+            'usuarios'  => $usuarios,
+            'paginador' => $paginador
         ]);
     }
 
