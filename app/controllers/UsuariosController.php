@@ -367,4 +367,49 @@ class UsuariosController extends Controller
         );
     }        
 
+    // 28/04/26 Para Cambio de Tema
+    // ──────────────────────────────────────────────────────────
+    /**
+     * CAMBIATEMA — Alterna entre tema claro y oscuro
+     * ────────────────────────────────────────────────
+     * URL: GET /usuarios/cambiatema
+     *
+     * 🎓 NOTA: nombre en minúscula por convención del Router.
+     *
+     * Flujo:
+     *   1. Lee tema actual de SESSION
+     *   2. Calcula el tema opuesto
+     *   3. Guarda en BD para persistir entre sesiones
+     *   4. Actualiza SESSION para efecto inmediato
+     *   5. Redirige a la página anterior
+     */
+    public function cambiatema(): void
+    {
+        // Verificar que hay usuario autenticado
+        if (!isset($_SESSION['usuario_id'])) {
+            $this->redirect('auth/login');
+        }
+
+        // ── Calcular tema opuesto ────────────────────────────
+        $temaActual = $_SESSION['usuario_tema'] ?? 'claro';
+        $temaNuevo  = $temaActual === 'claro' ? 'oscuro' : 'claro';
+
+        // ── Guardar en BD ────────────────────────────────────
+        // Así persiste aunque el usuario cierre el browser
+        $this->usuarioModel->guardarTema(
+            $_SESSION['usuario_id'],
+            $temaNuevo
+        );
+
+        // ── Actualizar SESSION ───────────────────────────────
+        // Para efecto inmediato sin necesidad de re-login
+        $_SESSION['usuario_tema'] = $temaNuevo;
+
+        // ── Redirigir a página anterior ──────────────────────
+        // HTTP_REFERER contiene la URL de donde vino el usuario
+        $referer = $_SERVER['HTTP_REFERER'] ?? BASE_URL . '/contactos';
+        header('Location: ' . $referer);
+        exit();
+    }    
+
 }

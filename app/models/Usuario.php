@@ -52,7 +52,7 @@ class Usuario extends Model
     {
         return $this->db->query(
             "SELECT id, nombre, apellido, email,
-                    password, rol, activo
+                    password, rol, activo, tema 
             FROM {$this->tabla}
             WHERE email = ?",
             [$email]
@@ -217,5 +217,29 @@ class Usuario extends Model
                 FETCH NEXT " . (int)$limite . " ROWS ONLY";
 
         return $this->db->query($sql)->fetchAll();
+    }
+
+    //Para cambio de Tema 28/04/26
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Guarda la preferencia de tema del usuario.
+     * Se llama cuando el usuario hace clic en ☀️/🌙
+     *
+     * @param int    $id   ID del usuario
+     * @param string $tema 'claro' o 'oscuro'
+     */
+    public function guardarTema(int $id, string $tema): void
+    {
+        // Validar que solo sean valores permitidos
+        if (!in_array($tema, ['claro', 'oscuro'])) {
+            $tema = 'claro';
+        }
+
+        $this->db->query(
+            "UPDATE {$this->tabla}
+            SET tema = ?
+            WHERE id = ?",
+            [$tema, $id]
+        );
     }
 }

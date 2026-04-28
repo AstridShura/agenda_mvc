@@ -1,5 +1,10 @@
+<?php
+// Lee el tema de la SESSION
+// Si no hay SESSION activa usa 'claro'
+$temaActual = $_SESSION['usuario_tema'] ?? 'claro';
+?>
 <!DOCTYPE html>
-<html lang="es">
+<HTML lang="es" data-tema="<?= $temaActual ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,13 +17,628 @@
     <link href="<?= BASE_URL ?>/assets/css/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-        body        { background-color: #f8f9fa; }
-        .navbar     { background: linear-gradient(135deg, #1a1a2e, #16213e); }
-        .card       { border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-        .badge-tipo { font-size: .75rem; }
-        .btn-action { width: 32px; height: 32px; padding: 0;
-                      display:inline-flex; align-items:center;
-                      justify-content:center; }
+    /* ══════════════════════════════════════════════════
+       TEMA CLARO — Variables CSS
+    ══════════════════════════════════════════════════ */
+    :root {
+        --bg-body         : #f8f9fa;
+        --bg-card         : #ffffff;
+        --bg-card-header  : #f8f9fa;
+        --bg-table-head   : #212529;
+        --bg-table-row    : #ffffff;
+        --bg-table-alt    : #f8f9fa;
+        --bg-table-border : #dee2e6;
+        --bg-input        : #ffffff;
+        --bg-navbar       : linear-gradient(135deg, #1a1a2e, #16213e);
+        --bg-dropdown     : #ffffff;
+        --bg-dropdown-hov : #f8f9fa;
+        --bg-code         : #f1f3f5;
+
+        --text-primary    : #212529;
+        --text-secondary  : #6c757d;
+        --text-heading    : #212529;
+        --text-label      : #495057;
+        --text-code       : #e83e8c;
+
+        --border-color    : #dee2e6;
+        --shadow          : 0 2px 10px rgba(0,0,0,0.08);
+        --link-color      : #0d6efd;
+
+        --input-bg        : #ffffff;
+        --input-border    : #ced4da;
+        --input-text      : #212529;
+        --input-placeholder: #6c757d;
+
+        --table-striped-bg : #f8f9fa;
+        --table-hover-bg   : #e9ecef;
+        --table-border     : #dee2e6;
+        --table-text       : #212529;
+
+        --page-link-bg    : #ffffff;
+        --page-link-color : #0d6efd;
+        --page-link-border: #dee2e6;
+
+        --alert-info-bg   : #cff4fc;
+        --alert-info-text : #055160;
+        --alert-info-bord : #b6effb;
+    }
+
+    /* ══════════════════════════════════════════════════
+       TEMA OSCURO — Variables CSS
+    ══════════════════════════════════════════════════ */
+    [data-tema="oscuro"] {
+        --bg-body         : #0d1117;
+        --bg-card         : #161b22;
+        --bg-card-header  : #1c2128;
+        --bg-table-head   : #1c2128;
+        --bg-table-row    : #161b22;
+        --bg-table-alt    : #1c2128;
+        --bg-table-border : #30363d;
+        --bg-input        : #21262d;
+        --bg-navbar       : linear-gradient(135deg, #010409, #0d1117);
+        --bg-dropdown     : #161b22;
+        --bg-dropdown-hov : #1c2128;
+        --bg-code         : #21262d;
+
+        --text-primary    : #e6edf3;
+        --text-secondary  : #8b949e;
+        --text-heading    : #e6edf3;
+        --text-label      : #c9d1d9;
+        --text-code       : #ff7b7b;
+
+        --border-color    : #30363d;
+        --shadow          : 0 2px 10px rgba(0,0,0,0.5);
+        --link-color      : #58a6ff;
+
+        --input-bg        : #21262d;
+        --input-border    : #30363d;
+        --input-text      : #e6edf3;
+        --input-placeholder: #8b949e;
+
+        --table-striped-bg : #1c2128;
+        --table-hover-bg   : #262c36;
+        --table-border     : #30363d;
+        --table-text       : #e6edf3;
+
+        --page-link-bg    : #161b22;
+        --page-link-color : #58a6ff;
+        --page-link-border: #30363d;
+
+        --alert-info-bg   : #0c2d48;
+        --alert-info-text : #58a6ff;
+        --alert-info-bord : #1a6a9a;
+    }
+
+    /* ══════════════════════════════════════════════════
+       BODY Y BASE
+    ══════════════════════════════════════════════════ */
+    body {
+        background-color : var(--bg-body);
+        color            : var(--text-primary);
+    }
+
+    /* ══════════════════════════════════════════════════
+       NAVBAR
+    ══════════════════════════════════════════════════ */
+    .navbar {
+        background : var(--bg-navbar) !important;
+    }
+
+    /* ══════════════════════════════════════════════════
+       CARDS — El problema principal de fondo blanco
+    ══════════════════════════════════════════════════ */
+    .card {
+        background-color : var(--bg-card) !important;
+        border-color     : var(--border-color) !important;
+        box-shadow       : var(--shadow);
+        color            : var(--text-primary);
+    }
+
+    .card-header {
+        background-color : var(--bg-card-header) !important;
+        border-color     : var(--border-color) !important;
+        color            : var(--text-primary) !important;
+    }
+
+    .card-body {
+        background-color : var(--bg-card) !important;
+        color            : var(--text-primary);
+    }
+
+    .card-footer {
+        background-color : var(--bg-card-header) !important;
+        border-color     : var(--border-color) !important;
+        color            : var(--text-secondary);
+    }
+
+    /* ══════════════════════════════════════════════════
+       TABLAS — Fondo blanco corregido
+    ══════════════════════════════════════════════════ */
+    .table {
+        color            : var(--table-text) !important;
+        border-color     : var(--table-border) !important;
+        --bs-table-color : var(--table-text);
+        --bs-table-bg    : var(--bg-table-row);
+        --bs-table-border-color: var(--table-border);
+    }
+
+    /* Encabezado oscuro de tabla */
+    .table-dark {
+        --bs-table-bg     : var(--bg-table-head) !important;
+        --bs-table-color  : #ffffff !important;
+        --bs-table-border-color: var(--table-border) !important;
+        background-color  : var(--bg-table-head) !important;
+        color             : #ffffff !important;
+    }
+
+    /* Filas impares */
+    .table tbody tr {
+        background-color : var(--bg-table-row);
+        color            : var(--table-text);
+        border-color     : var(--table-border);
+    }
+
+    /* Filas pares — striped */
+    .table tbody tr:nth-child(even) {
+        background-color : var(--table-striped-bg);
+    }
+
+    /* Hover */
+    .table-hover tbody tr:hover {
+        background-color : var(--table-hover-bg) !important;
+        color            : var(--table-text) !important;
+    }
+
+    /* Celdas */
+    .table td,
+    .table th {
+        border-color     : var(--table-border) !important;
+        color            : var(--table-text);
+    }
+
+    /* Tabla sin bordes — usada en ver.php */
+    .table-borderless td,
+    .table-borderless th {
+        border           : none !important;
+        background-color : transparent !important;
+        color            : var(--table-text);
+    }
+
+    /* ══════════════════════════════════════════════════
+       FORMULARIOS — Texto invisible corregido
+    ══════════════════════════════════════════════════ */
+    .form-control {
+        background-color : var(--input-bg) !important;
+        color            : var(--input-text) !important;
+        border-color     : var(--input-border) !important;
+    }
+
+    .form-control:focus {
+        background-color : var(--input-bg) !important;
+        color            : var(--input-text) !important;
+        border-color     : var(--link-color) !important;
+        box-shadow       : 0 0 0 .25rem rgba(88,166,255,.15) !important;
+    }
+
+    .form-control::placeholder {
+        color            : var(--input-placeholder) !important;
+        opacity          : 1;
+    }
+
+    .form-select {
+        background-color : var(--input-bg) !important;
+        color            : var(--input-text) !important;
+        border-color     : var(--input-border) !important;
+    }
+
+    .form-select:focus {
+        background-color : var(--input-bg) !important;
+        color            : var(--input-text) !important;
+        border-color     : var(--link-color) !important;
+    }
+
+    /* Input group */
+    .input-group-text {
+        background-color : var(--input-bg) !important;
+        border-color     : var(--input-border) !important;
+        color            : var(--text-secondary) !important;
+    }
+
+    /* Labels de formulario */
+    .form-label {
+        color            : var(--text-label) !important;
+    }
+
+    label {
+        color            : var(--text-label);
+    }
+
+    /* Textarea */
+    textarea.form-control {
+        background-color : var(--input-bg) !important;
+        color            : var(--input-text) !important;
+    }
+
+    /* Checkbox y switch */
+    .form-check-label {
+        color            : var(--text-primary) !important;
+    }
+
+    /* ══════════════════════════════════════════════════
+       TEXTO Y TIPOGRAFÍA
+    ══════════════════════════════════════════════════ */
+    h1, h2, h3, h4, h5, h6 {
+        color            : var(--text-heading) !important;
+    }
+
+    p, span, div, li {
+        color            : inherit;
+    }
+
+    .text-muted {
+        color            : var(--text-secondary) !important;
+    }
+
+    a {
+        color            : var(--link-color);
+    }
+
+    a:hover {
+        color            : var(--link-color);
+        opacity          : .85;
+    }
+
+    /* Texto oscuro en badges warning */
+    .badge.bg-warning {
+        color            : #000 !important;
+    }
+
+    code {
+        background-color : var(--bg-code);
+        color            : var(--text-code);
+        padding          : .1rem .3rem;
+        border-radius    : .25rem;
+    }
+
+    /* ══════════════════════════════════════════════════
+       PAGINADOR
+    ══════════════════════════════════════════════════ */
+    .page-link {
+        background-color : var(--page-link-bg) !important;
+        border-color     : var(--page-link-border) !important;
+        color            : var(--page-link-color) !important;
+    }
+
+    .page-item.disabled .page-link {
+        background-color : var(--page-link-bg) !important;
+        border-color     : var(--page-link-border) !important;
+        color            : var(--text-secondary) !important;
+    }
+
+    .page-item.active .page-link {
+        background-color : var(--link-color) !important;
+        border-color     : var(--link-color) !important;
+        color            : #ffffff !important;
+    }
+
+    /* ══════════════════════════════════════════════════
+       ALERTS
+    ══════════════════════════════════════════════════ */
+    [data-tema="oscuro"] .alert-info {
+        background-color : var(--alert-info-bg)   !important;
+        border-color     : var(--alert-info-bord)  !important;
+        color            : var(--alert-info-text)  !important;
+    }
+
+    [data-tema="oscuro"] .alert-danger {
+        background-color : #2d0c0c !important;
+        border-color     : #9a1a1a !important;
+        color            : #ff7b7b !important;
+    }
+
+    [data-tema="oscuro"] .alert-success {
+        background-color : #0c2d1a !important;
+        border-color     : #1a6a3a !important;
+        color            : #56d364 !important;
+    }
+
+    [data-tema="oscuro"] .alert-warning {
+        background-color : #2d220c !important;
+        border-color     : #9a6a1a !important;
+        color            : #e3b341 !important;
+    }
+
+    /* ══════════════════════════════════════════════════
+       DROPDOWNS
+    ══════════════════════════════════════════════════ */
+    .dropdown-menu {
+        background-color : var(--bg-dropdown) !important;
+        border-color     : var(--border-color) !important;
+    }
+
+    .dropdown-item {
+        color            : var(--text-primary) !important;
+    }
+
+    .dropdown-item:hover,
+    .dropdown-item:focus {
+        background-color : var(--bg-dropdown-hov) !important;
+        color            : var(--text-primary) !important;
+    }
+
+    .dropdown-divider {
+        border-color     : var(--border-color) !important;
+    }
+
+    .dropdown-header {
+        color            : var(--text-secondary) !important;
+    }
+
+    /* ══════════════════════════════════════════════════
+       BUSCADOR AJAX — Fondo blanco corregido
+    ══════════════════════════════════════════════════ */
+    #resultadosBusqueda,
+    #resultadosBusquedaCat,
+    #resultadosBusquedaUsu,
+    #resultadosBusquedaCita {
+        background-color : var(--bg-dropdown)   !important;
+        border-color     : var(--border-color)  !important;
+        color            : var(--text-primary)  !important;
+    }
+
+    #resultadosBusqueda a,
+    #resultadosBusquedaCat a,
+    #resultadosBusquedaUsu a,
+    #resultadosBusquedaCita a {
+        color            : var(--text-primary) !important;
+        background-color : var(--bg-dropdown)  !important;
+    }
+
+    #resultadosBusqueda a:hover,
+    #resultadosBusquedaCat a:hover,
+    #resultadosBusquedaUsu a:hover,
+    #resultadosBusquedaCita a:hover {
+        background-color : var(--bg-dropdown-hov) !important;
+    }
+
+    /* ══════════════════════════════════════════════════
+       TABS DE NAVEGACIÓN
+    ══════════════════════════════════════════════════ */
+    .nav-tabs {
+        border-color     : var(--border-color) !important;
+    }
+
+    .nav-tabs .nav-link {
+        color            : var(--text-secondary);
+        border-color     : transparent;
+    }
+
+    .nav-tabs .nav-link:hover {
+        border-color     : var(--border-color);
+        color            : var(--text-primary);
+    }
+
+    .nav-tabs .nav-link.active {
+        background-color : var(--bg-card)   !important;
+        border-color     : var(--border-color)
+                           var(--border-color)
+                           var(--bg-card)   !important;
+        color            : var(--text-primary) !important;
+    }
+
+    /* ══════════════════════════════════════════════════
+       BORDES Y SEPARADORES
+    ══════════════════════════════════════════════════ */
+    .border {
+        border-color     : var(--border-color) !important;
+    }
+
+    hr {
+        border-color     : var(--border-color);
+        opacity          : 1;
+    }
+
+    /* List group */
+    .list-group-item {
+        background-color : var(--bg-card)      !important;
+        border-color     : var(--border-color) !important;
+        color            : var(--text-primary) !important;
+    }
+
+    /* ══════════════════════════════════════════════════
+       BOTONES OUTLINE EN TEMA OSCURO
+    ══════════════════════════════════════════════════ */
+    [data-tema="oscuro"] .btn-outline-secondary {
+        color            : var(--text-secondary);
+        border-color     : var(--border-color);
+    }
+
+    [data-tema="oscuro"] .btn-outline-secondary:hover {
+        background-color : var(--bg-table-alt);
+        color            : var(--text-primary);
+        border-color     : var(--border-color);
+    }
+
+    [data-tema="oscuro"] .btn-outline-primary {
+        color            : var(--link-color);
+        border-color     : var(--link-color);
+    }
+
+    [data-tema="oscuro"] .btn-outline-primary:hover {
+        background-color : var(--link-color);
+        color            : #ffffff;
+    }
+
+    [data-tema="oscuro"] .btn-outline-info {
+        color            : #58a6ff;
+        border-color     : #58a6ff;
+    }
+
+    [data-tema="oscuro"] .btn-outline-warning {
+        color            : #e3b341;
+        border-color     : #e3b341;
+    }
+
+    [data-tema="oscuro"] .btn-outline-danger {
+        color            : #ff7b7b;
+        border-color     : #ff7b7b;
+    }
+
+    /* ══════════════════════════════════════════════════
+       CLASES UTILITARIAS DE BOOTSTRAP
+    ══════════════════════════════════════════════════ */
+    [data-tema="oscuro"] .bg-white {
+        background-color : var(--bg-card) !important;
+    }
+
+    [data-tema="oscuro"] .bg-light {
+        background-color : var(--bg-card-header) !important;
+    }
+
+    [data-tema="oscuro"] .text-dark {
+        color            : var(--text-primary) !important;
+    }
+
+    [data-tema="oscuro"] .border-bottom {
+        border-color     : var(--border-color) !important;
+    }
+
+    /* ══════════════════════════════════════════════════
+       TOGGLE TEMA — Botón en navbar
+    ══════════════════════════════════════════════════ */
+    .btn-tema {
+        border-radius    : 20px !important;
+        padding          : .25rem .75rem !important;
+        font-size        : .8rem !important;
+    }
+
+    /* ══════════════════════════════════════════════════
+       BOTONES DE ACCIÓN — Tamaño fijo
+    ══════════════════════════════════════════════════ */
+    .btn-action {
+        width            : 32px;
+        height           : 32px;
+        padding          : 0;
+        display          : inline-flex;
+        align-items      : center;
+        justify-content  : center;
+    }
+
+    /* ══════════════════════════════════════════════════
+       TRANSICIÓN SUAVE AL CAMBIAR TEMA
+    ══════════════════════════════════════════════════ */
+    body,
+    .card,
+    .card-header,
+    .card-body,
+    .card-footer,
+    .table,
+    .table td,
+    .table th,
+    .form-control,
+    .form-select,
+    .input-group-text,
+    .dropdown-menu,
+    .list-group-item,
+    .page-link,
+    .nav-tabs .nav-link {
+        transition       : background-color .25s ease,
+                           border-color    .25s ease,
+                           color           .25s ease !important;
+    }
+
+    /* ══════════════════════════════════════════════════
+    TOM SELECT — Tema oscuro
+    El select de contactos en Citas usa TomSelect
+    que tiene sus propios estilos que hay que
+    sobreescribir explícitamente
+    ══════════════════════════════════════════════════ */
+
+    /* Contenedor principal del select */
+    [data-tema="oscuro"] .ts-wrapper .ts-control {
+        background-color : var(--input-bg)     !important;
+        border-color     : var(--input-border) !important;
+        color            : var(--input-text)   !important;
+    }
+
+    /* Cuando está enfocado/activo */
+    [data-tema="oscuro"] .ts-wrapper.focus .ts-control {
+        background-color : var(--input-bg)   !important;
+        border-color     : var(--link-color) !important;
+        box-shadow       : 0 0 0 .25rem rgba(88,166,255,.15) !important;
+    }
+
+    /* Texto escrito en el input de búsqueda */
+    [data-tema="oscuro"] .ts-wrapper .ts-control input {
+        background-color : transparent       !important;
+        color            : var(--input-text) !important;
+    }
+
+    /* Item seleccionado dentro del control */
+    [data-tema="oscuro"] .ts-wrapper .ts-control .item {
+        background-color : #30363d           !important;
+        border-color     : var(--border-color) !important;
+        color            : var(--input-text) !important;
+    }
+
+    /* Dropdown — lista desplegable */
+    [data-tema="oscuro"] .ts-wrapper .ts-dropdown {
+        background-color : var(--bg-dropdown)  !important;
+        border-color     : var(--border-color) !important;
+        color            : var(--text-primary) !important;
+    }
+
+    /* Cada opción en el dropdown */
+    [data-tema="oscuro"] .ts-wrapper .ts-dropdown .option {
+        background-color : var(--bg-dropdown)  !important;
+        color            : var(--text-primary) !important;
+    }
+
+    /* Opción al pasar el cursor — cursor invisible corregido */
+    [data-tema="oscuro"] .ts-wrapper .ts-dropdown .option:hover,
+    [data-tema="oscuro"] .ts-wrapper .ts-dropdown .option.active {
+        background-color : var(--link-color) !important;
+        color            : #ffffff           !important;
+        cursor           : pointer           !important;
+    }
+
+    /* Opción seleccionada actualmente */
+    [data-tema="oscuro"] .ts-wrapper .ts-dropdown .option.selected {
+        background-color : #30363d           !important;
+        color            : var(--link-color) !important;
+    }
+
+    /* Placeholder */
+    [data-tema="oscuro"] .ts-wrapper .ts-control .placeholder {
+        color            : var(--input-placeholder) !important;
+    }
+
+    /* Grupo de opciones — encabezado */
+    [data-tema="oscuro"] .ts-wrapper .ts-dropdown .optgroup-header {
+        background-color : var(--bg-card-header) !important;
+        color            : var(--text-secondary) !important;
+    }
+
+    /* Sin resultados */
+    [data-tema="oscuro"] .ts-wrapper .ts-dropdown .no-results {
+        background-color : var(--bg-dropdown)  !important;
+        color            : var(--text-secondary) !important;
+    }
+
+    /* Botón X para limpiar selección */
+    [data-tema="oscuro"] .ts-wrapper .ts-control .clear-button {
+        color            : var(--text-secondary) !important;
+    }
+
+    [data-tema="oscuro"] .ts-wrapper .ts-control .clear-button:hover {
+        color            : var(--text-primary) !important;
+    }
+
+    /* Separador entre opciones */
+    [data-tema="oscuro"] .ts-wrapper .ts-dropdown .divider {
+        border-color     : var(--border-color) !important;
+    }
+
     </style>
 
     <!-- Agregado para Citas -->
@@ -70,6 +690,22 @@
                     <i class="bi bi-people-fill me-1"></i>Usuarios
                 </a>
             </div>
+
+                <!-- ── Toggle Tema 28/04/26 ─────────────────────── -->
+                <a href="<?= BASE_URL ?>/usuarios/cambiatema"
+                   class="btn btn-sm btn-tema
+                          <?= $temaActual === 'oscuro'
+                              ? 'btn-warning'
+                              : 'btn-outline-light' ?>"
+                   title="<?= $temaActual === 'oscuro'
+                              ? 'Cambiar a Modo Claro'
+                              : 'Cambiar a Modo Oscuro' ?>">
+                    <?php if ($temaActual === 'oscuro'): ?>
+                        ☀️ <span class="d-none d-md-inline">Claro</span>
+                    <?php else: ?>
+                        🌙 <span class="d-none d-md-inline">Oscuro</span>
+                    <?php endif; ?>
+                </a>
 
             <!-- Usuario autenticado — derecha -->
             <div class="navbar-nav ms-auto">
@@ -863,5 +1499,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     })();
     </script>
+
+    <!-- ── Tema: aplicar inmediatamente sin flash 28/04/26 ───────────── -->
+    <script>
+    (function () {
+        // Aplicar tema guardado ANTES de que el browser pinte
+        // Evita el "flash" de tema incorrecto al cargar
+        var tema = '<?= $_SESSION["usuario_tema"] ?? "claro" ?>';
+        document.documentElement.setAttribute('data-tema', tema);
+    })();
+    </script>    
 </body>
-</html>
+</HTML>

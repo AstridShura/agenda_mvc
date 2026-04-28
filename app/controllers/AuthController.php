@@ -93,6 +93,11 @@ class AuthController extends Controller
             $_SESSION['usuario_rol']    = $usuario['rol'];
             $_SESSION['usuario_email']  = $usuario['email'];
 
+            // ── Cargar tema preferido del usuario 28/04/26─────────────────
+            // Si no tiene tema guardado → usar 'claro' por defecto
+            $_SESSION['usuario_tema']   = $usuario['tema'] ?? 'claro';
+            //fin cambio Tema
+            
             $this->flash(
                 'success',
                 "Bienvenido <strong>{$usuario['nombre']}</strong>. 👋"
