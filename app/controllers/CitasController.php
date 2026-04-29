@@ -479,4 +479,97 @@ class CitasController extends Controller
         );
     }
 
+    //29/04/26 PAra Drag and Drop (arrastrar y soltar)    
+    // ─────────────────────────────────────────────────────────
+    /**
+     * KANBAN — Vista de seguimiento de citas
+     * ───────────────────────────────────────
+     * URL: GET /citas/kanban
+     *
+     * Muestra las citas agrupadas en 3 columnas:
+     * Pendiente | Confirmada | Cancelada
+     * Con Drag & Drop para cambiar estado.
+     */
+    public function kanban(): void
+    {
+        // Obtener citas agrupadas por estado
+        $pendientes  = $this->citaModel->getPorEstado('Pendiente');
+        $confirmadas = $this->citaModel->getPorEstado('Confirmada');
+        $canceladas  = $this->citaModel->getPorEstado('Cancelada');
+
+        $this->view('citas/kanban', [
+            'titulo'      => 'Seguimiento de Citas',
+            'pendientes'  => $pendientes,
+            'confirmadas' => $confirmadas,
+            'canceladas'  => $canceladas,
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * ACTUALIZARESTADO — Endpoint AJAX para Drag & Drop
+     * ───────────────────────────────────────────────────
+     * URL: POST /citas/actualizarestado
+     *
+     * Recibe via POST:
+     *   id_cita : int    → ID de la cita arrastrada
+     *   estado  : string → Nuevo estado (Pendiente|Confirmada|Cancelada)
+     *
+     * Retorna JSON:
+     *   {'ok': true}  → guardado correctamente
+     *   {'ok': false} → error
+     *
+     * 🎓 NOTA: Es POST porque modifica datos en BD.
+     * No requiere header AJAX especial porque
+     * lo enviamos con fetch() desde el JS.
+     */
+    public function actualizarestado(): void
+    {
+        header('Content-Type: application/json');
+
+        // Verificar que sea petición POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['ok' => false, 'error' => 'Método no permitido']);
+            exit();
+        }
+
+        // Leer datos JSON del body de la petición
+        $body    = file_get_contents('php://input');
+        $datos   = json_decode($body, true);
+
+        $idCita  = (int)  ($datos['id_cita'] ?? 0);
+        $estado  = trim($datos['estado']     ?? '');
+
+        // Validar
+        $estadosValidos = ['Pendiente', 'Confirmada', 'Cancelada'];
+
+        if ($idCita <= 0 || !in_array($estado, $estadosValidos)) {
+            echo json_encode([
+                'ok'    => false,
+                'error' => 'Datos inválidos'
+            ]);
+            exit();
+        }
+
+        // Verificar que la cita existe
+        $cita = $this->citaModel->getById($idCita);
+        if (!$cita) {
+            echo json_encode([
+                'ok'    => false,
+                'error' => 'Cita no encontrada'
+            ]);
+            exit();
+        }
+
+        // Guardar nuevo estado en BD
+        $this->citaModel->cambiarEstado($idCita, $estado);
+
+        echo json_encode([
+            'ok'     => true,
+            'estado' => $estado,
+            'cita'   => $cita['titulo']
+        ]);
+        exit();
+    }
+
 }

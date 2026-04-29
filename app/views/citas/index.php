@@ -69,7 +69,11 @@ $iconosTipo = [
            class="btn btn-primary btn-sm">
             <i class="bi bi-plus-circle me-1"></i>Nueva Cita
         </a>
-
+        <!-- Botón Kanban -->
+        <a href="<?= BASE_URL ?>/citas/kanban"
+        class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-kanban me-1"></i>Kanban
+        </a>
     </div>
 </div>
 

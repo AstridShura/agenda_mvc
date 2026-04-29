@@ -639,6 +639,70 @@ $temaActual = $_SESSION['usuario_tema'] ?? 'claro';
         border-color     : var(--border-color) !important;
     }
 
+
+    /* 29/04/26    KANBAN BOARD Drug and Drop (Arrastrar y soltar) */
+
+    /* Tarjeta individual */
+    .kanban-card {
+        background-color : var(--bg-card);
+        border           : 1px solid var(--border-color);
+        border-radius    : 8px;
+        cursor           : grab;
+        transition       : transform .15s ease,
+                        box-shadow .15s ease,
+                        opacity .15s ease;
+        user-select      : none;
+    }
+
+    /* Al pasar el mouse */
+    .kanban-card:hover {
+        transform        : translateY(-2px);
+        box-shadow       : 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    /* Mientras se arrastra */
+    .kanban-card.sortable-chosen {
+        cursor           : grabbing;
+        transform        : rotate(2deg) scale(1.02);
+        box-shadow       : 0 12px 30px rgba(0,0,0,0.25);
+        opacity          : .95;
+        z-index          : 9999;
+    }
+
+    /* Fantasma — placeholder donde caerá la tarjeta */
+    .kanban-card.sortable-ghost {
+        opacity          : .3;
+        background-color : var(--bg-table-alt);
+        border           : 2px dashed var(--border-color);
+    }
+
+    /* Animación al soltar */
+    .kanban-card.sortable-drag {
+        opacity          : 1;
+    }
+
+    /* Zona de drop activa */
+    .kanban-lista.sortable-over {
+        background-color : var(--bg-table-alt);
+        border-radius    : 8px;
+        min-height       : 60px;
+    }
+
+    /* Placeholder vacío */
+    .kanban-vacio {
+        transition       : all .2s ease;
+    }
+
+    /* Indicador de guardando */
+    .guardando {
+        animation        : pulso 1s infinite;
+    }
+
+    @keyframes pulso {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: .5; }
+    }
+
     </style>
 
     <!-- Agregado para Citas -->
@@ -657,6 +721,9 @@ $temaActual = $_SESSION['usuario_tema'] ?? 'claro';
 
 <!-- FullCalendar JS -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+<!-- SortableJS — Drag & Drop (Arrastrar y Soltar) 29/04/26 -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 
 </head>
 <body>
@@ -686,6 +753,10 @@ $temaActual = $_SESSION['usuario_tema'] ?? 'claro';
                 <a class="nav-link text-white" href="<?= BASE_URL ?>/citas">
                     <i class="bi bi-calendar2-week me-1"></i>Citas
                 </a>
+                <!-- Kanban Drop and Drag 29/04/26-->
+                <a class="nav-link text-white" href="<?= BASE_URL ?>/citas/kanban">
+                    <i class="bi bi-kanban me-1"></i>Kanban
+                </a>                
                 <a class="nav-link text-white" href="<?= BASE_URL ?>/usuarios">
                     <i class="bi bi-people-fill me-1"></i>Usuarios
                 </a>
@@ -1509,5 +1580,180 @@ document.addEventListener('DOMContentLoaded', function () {
         document.documentElement.setAttribute('data-tema', tema);
     })();
     </script>    
+
+    <!-- 29/04/26 Drag and Drop/Arrastrar y soltar-->
+    <!-- ── Kanban Board — Drag & Drop ────────── -->
+    <script>
+    (function () 
+    {
+
+        // Solo ejecutar en la página del Kanban
+        var board = document.getElementById('kanbanBoard');
+        if (!board) return;
+
+        // URL del endpoint AJAX
+        var urlActualizar = '<?= BASE_URL ?>/citas/actualizarestado';
+
+        // ── Inicializar SortableJS en cada columna ────────────
+        var listas = document.querySelectorAll('.kanban-lista');
+
+        listas.forEach(function (lista) {
+            new Sortable(lista, {
+
+                // Permite arrastrar entre todas las listas
+                group: 'citas',
+
+                // Animación suave al reordenar
+                animation: 200,
+
+                // Clase CSS mientras se arrastra
+                chosenClass:  'sortable-chosen',
+
+                // Clase CSS del elemento fantasma
+                ghostClass:   'sortable-ghost',
+
+                // Clase CSS del elemento que se arrastra
+                dragClass:    'sortable-drag',
+
+                // Clase al pasar sobre una lista
+                dragoverBubble: true,
+
+                // Qué elementos son arrastrables
+                draggable: '.kanban-card',
+
+                // ── Al soltar la tarjeta ─────────────────────
+                onEnd: function (evt) {
+                    var tarjeta      = evt.item;
+                    var listaDestino = evt.to;
+                    var listaOrigen  = evt.from;
+
+                    // Si no cambió de columna → no hacer nada
+                    if (listaOrigen === listaDestino) {
+                        actualizarContadores();
+                        return;
+                    }
+
+                    var idCita       = tarjeta.getAttribute('data-id');
+                    var estadoNuevo  = listaDestino.getAttribute('data-estado');
+                    var estadoViejo  = listaOrigen.getAttribute('data-estado');
+
+                    // Actualizar visualmente el atributo
+                    tarjeta.setAttribute('data-estado', estadoNuevo);
+
+                    // Actualizar barra de color superior
+                    var barra = tarjeta.querySelector('div[style*="height:4px"]');
+                    if (barra) {
+                        var colores = {
+                            'Pendiente'  : '#ffc107',
+                            'Confirmada' : '#28a745',
+                            'Cancelada'  : '#dc3545'
+                        };
+                        barra.style.background = colores[estadoNuevo] || '#6c757d';
+                    }
+
+                    // Actualizar contadores de columnas
+                    actualizarContadores();
+
+                    // Guardar en BD via AJAX
+                    guardarEstado(idCita, estadoNuevo, estadoViejo, tarjeta, listaOrigen);
+                }
+            });
+        });
+
+        // ── Guardar estado en BD ──────────────────────────────
+        function guardarEstado(idCita, estadoNuevo, estadoViejo, tarjeta, listaOrigen) {
+
+            // Mostrar indicador visual en la tarjeta
+            tarjeta.classList.add('guardando');
+
+            fetch(urlActualizar, {
+                method  : 'POST',
+                headers : {
+                    'Content-Type'     : 'application/json',
+                    'X-Requested-With' : 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    id_cita : parseInt(idCita),
+                    estado  : estadoNuevo
+                })
+            })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                tarjeta.classList.remove('guardando');
+
+                if (data.ok) {
+                    // ✅ Éxito — mostrar toast
+                    mostrarToast(
+                        '✅ "' + data.cita + '" → ' + estadoNuevo,
+                        'success'
+                    );
+                } else {
+                    // ❌ Error — revertir al estado original
+                    mostrarToast(
+                        '❌ Error al guardar. Revierte automáticamente.',
+                        'danger'
+                    );
+                    // Devolver la tarjeta a la columna original
+                    listaOrigen.appendChild(tarjeta);
+                    tarjeta.setAttribute('data-estado', estadoViejo);
+                    actualizarContadores();
+                }
+            })
+            .catch(function (error) {
+                tarjeta.classList.remove('guardando');
+                console.error('Error:', error);
+                mostrarToast('❌ Error de conexión. Intenta de nuevo.', 'danger');
+
+                // Revertir
+                listaOrigen.appendChild(tarjeta);
+                tarjeta.setAttribute('data-estado', estadoViejo);
+                actualizarContadores();
+            });
+        }
+
+        // ── Actualizar contadores de cada columna ─────────────
+        function actualizarContadores() {
+            var listas = document.querySelectorAll('.kanban-lista');
+            listas.forEach(function (lista) {
+                var estado    = lista.getAttribute('data-estado');
+                var tarjetas  = lista.querySelectorAll('.kanban-card');
+                var contador  = document.getElementById('contador-' + estado);
+                if (contador) {
+                    contador.textContent = tarjetas.length;
+                }
+
+                // Mostrar/ocultar placeholder vacío
+                var vacio    = lista.querySelector('.kanban-vacio');
+                if (vacio) {
+                    vacio.style.display = tarjetas.length === 0
+                        ? 'block' : 'none';
+                }
+            });
+        }
+
+        // ── Toast de notificación ─────────────────────────────
+        function mostrarToast(mensaje, tipo) {
+            var toastEl  = document.getElementById('toastMsg');
+            var toastTxt = document.getElementById('toastTexto');
+
+            if (!toastEl || !toastTxt) return;
+
+            toastTxt.textContent = mensaje;
+
+            // Cambiar color según tipo
+            toastEl.className = 'toast align-items-center text-white border-0 bg-' + tipo;
+
+            // Mostrar el toast de Bootstrap
+            var toast = new bootstrap.Toast(toastEl, {
+                delay : 3000
+            });
+            toast.show();
+        }
+
+    })();
+    </script>
+    
 </body>
 </HTML>
