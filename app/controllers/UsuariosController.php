@@ -412,4 +412,94 @@ class UsuariosController extends Controller
         exit();
     }    
 
+    
+    //Para reportes WORD e Imagen 28/04/26
+    // ─────────────────────────────────────────────────────────
+    /**
+     * EXPORTAR WORD — Todos los usuarios
+     * URL: GET /usuarios/exportarword
+     */
+    public function exportarword(): void
+    {
+        $usuarios = $this->usuarioModel->getAll();
+
+        Exportador::word(
+            $usuarios,
+            [
+                'apellido'   => 'Apellido',
+                'nombre'     => 'Nombre',
+                'email'      => 'Email',
+                'usuario'    => 'Usuario',
+                'rol'        => 'Rol',
+                'activo'     => 'Estado',
+                'fecha_alta' => 'Fecha Alta',
+            ],
+            'Listado de Usuarios — Agenda MVC',
+            'usuarios_' . date('Ymd_His')
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * EXPORTAR IMAGEN — Infografía de usuarios
+     * URL: GET /usuarios/exportarimagen
+     */
+    public function exportarimagen(): void
+    {
+        $usuarios = $this->usuarioModel->getAll();
+
+        // ── Estadísticas ─────────────────────────────────────
+        $total    = count($usuarios);
+        $activos  = count(array_filter($usuarios,
+            fn($u) => $u['activo'] == 1));
+        $inactivos = $total - $activos;
+        $admins   = count(array_filter($usuarios,
+            fn($u) => $u['rol'] === 'admin'));
+        $normales = $total - $admins;
+
+        $stats = [
+            [
+                'label' => 'Total Usuarios',
+                'valor' => $total,
+                'color' => '#0d6efd'
+            ],
+            [
+                'label' => 'Activos',
+                'valor' => $activos,
+                'color' => '#28a745'
+            ],
+            [
+                'label' => 'Inactivos',
+                'valor' => $inactivos,
+                'color' => '#dc3545'
+            ],
+            [
+                'label' => 'Admins',
+                'valor' => $admins,
+                'color' => '#6f42c1'
+            ],
+            [
+                'label' => 'Usuarios',
+                'valor' => $normales,
+                'color' => '#17a2b8'
+            ],
+        ];
+
+        Exportador::imagen(
+            $usuarios,
+            [
+                'apellido'   => 'Apellido',
+                'nombre'     => 'Nombre',
+                'email'      => 'Email',
+                'usuario'    => 'Usuario',
+                'rol'        => 'Rol',
+                'activo'     => 'Estado',
+                'fecha_alta' => 'Fecha Alta',
+            ],
+            $stats,
+            'Infografía Usuarios — Agenda MVC',
+            'usuarios_infografia_' . date('Ymd_His')
+        );
+    }
+
 }

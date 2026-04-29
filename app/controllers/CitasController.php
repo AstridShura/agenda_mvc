@@ -387,5 +387,96 @@ class CitasController extends Controller
             'citas_' . date('Ymd_His')
         );
     }
-    
+ 
+    //Para reportes WORD e Imagen 28/04/26 
+    // ─────────────────────────────────────────────────────────
+    /**
+     * EXPORTAR WORD — Todas las citas
+     * URL: GET /citas/exportarword
+     */
+    public function exportarword(): void
+    {
+        $citas = $this->citaModel->getAll();
+
+        Exportador::word(
+            $citas,
+            [
+                'titulo'            => 'Título',
+                'contacto_apellido' => 'Apellido',
+                'contacto_nombre'   => 'Nombre',
+                'fecha_cita'        => 'Fecha',
+                'hora_inicio'       => 'Inicio',
+                'hora_fin'          => 'Fin',
+                'tipo'              => 'Tipo',
+                'estado'            => 'Estado',
+            ],
+            'Listado de Citas — Agenda MVC',
+            'citas_' . date('Ymd_His')
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * EXPORTAR IMAGEN — Infografía de citas
+     * URL: GET /citas/exportarimagen
+     */
+    public function exportarimagen(): void
+    {
+        $citas = $this->citaModel->getAll();
+
+        // ── Estadísticas ─────────────────────────────────────
+        $total      = count($citas);
+        $pendientes = count(array_filter($citas,
+            fn($c) => $c['estado'] === 'Pendiente'));
+        $confirmadas = count(array_filter($citas,
+            fn($c) => $c['estado'] === 'Confirmada'));
+        $canceladas = count(array_filter($citas,
+            fn($c) => $c['estado'] === 'Cancelada'));
+        $reuniones  = count(array_filter($citas,
+            fn($c) => $c['tipo'] === 'Reunion'));
+
+        $stats = [
+            [
+                'label' => 'Total Citas',
+                'valor' => $total,
+                'color' => '#0d6efd'
+            ],
+            [
+                'label' => 'Pendientes',
+                'valor' => $pendientes,
+                'color' => '#ffc107'
+            ],
+            [
+                'label' => 'Confirmadas',
+                'valor' => $confirmadas,
+                'color' => '#28a745'
+            ],
+            [
+                'label' => 'Canceladas',
+                'valor' => $canceladas,
+                'color' => '#dc3545'
+            ],
+            [
+                'label' => 'Reuniones',
+                'valor' => $reuniones,
+                'color' => '#6f42c1'
+            ],
+        ];
+
+        Exportador::imagen(
+            $citas,
+            [
+                'titulo'            => 'Título',
+                'contacto_apellido' => 'Contacto',
+                'fecha_cita'        => 'Fecha',
+                'hora_inicio'       => 'Inicio',
+                'tipo'              => 'Tipo',
+                'estado'            => 'Estado',
+            ],
+            $stats,
+            'Infografía Citas — Agenda MVC',
+            'citas_infografia_' . date('Ymd_His')
+        );
+    }
+
 }

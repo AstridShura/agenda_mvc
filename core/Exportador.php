@@ -8,10 +8,9 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 /**
- * ============================================================
  * CLASE Exportador (OPTIMIZADA PARA ALTO RENDIMIENTO)
- * ============================================================
- * Exporta datos a Excel (.xlsx) y PDF.
+ * 
+ * Exporta datos a Excel (.xlsx), PDF, Word (.docx) e Imagen (.jpg) con estilos profesionales.
  * - Estilos aplicados por bloques en Excel (Evita Memory Limit).
  * - Lógica de formateo centralizada (DRY).
  * - Detección estricta de fechas y booleanos.
@@ -319,35 +318,23 @@ class Exportador
     // ─────────────────────────────────────────────────────────
     /**
      * FORMATEO CENTRALIZADO (DRY)
-     * 
-     * Procesa el valor crudo de la BD para mostrarlo correctamente
-     * tanto en Excel como en PDF.
-     * 
-     * @param string $campo Nombre de la columna en la BD
-     * @param mixed  $valor Valor original
-     * @return string Valor formateado
      */
     private static function formatearDato(string $campo, mixed $valor): string
     {
         $valorStr = (string) ($valor ?? '');
         if (empty($valorStr)) return '';
 
-        // 1. Fechas (Regex estricto: Espera formato Y-m-d o Y-m-d H:i:s de la BD)
         if (preg_match('/^\d{4}-\d{2}-\d{2}/', $valorStr)) {
             $timestamp = strtotime($valorStr);
             if ($timestamp !== false) {
-                // Si tiene horas:minutos, las muestra. Si no, solo fecha.
                 return (strpos($valorStr, ':') !== false) 
                     ? date('d/m/Y H:i', $timestamp) 
                     : date('d/m/Y', $timestamp);
             }
         }
 
-        // 2. Booleanos / Estados (Lista blanca estricta para evitar falsos positivos)
-        // NOTA: Si tienes otros campos como 'estado', 'vigente', agrégalo en este array.
         $camposBooleanos = ['activo', 'estado', 'status'];
         if (in_array(strtolower($campo), $camposBooleanos, true)) {
-            // Considera Activo si es 1, "1", true, "true" o "si"
             if (in_array(strtolower($valorStr), ['1', 'true', 'si', 'sí'], true)) {
                 return 'Activo';
             }
@@ -356,4 +343,350 @@ class Exportador
 
         return $valorStr;
     }
+
+    // 28/04/26 ────────────────────────────────────────    
+    // Exportador a WORD
+
+    public static function word(array $datos, array $columnas, string $titulo, string $archivo): void 
+    {
+
+        //Guardamos el nivel de error actual, apagamos los 'Deprecated' (que PhpWord dispara internamente) 
+        //para que no impriman basura y rompan los Headers. 
+
+        $nivelErrorOriginal = error_reporting();
+        error_reporting($nivelErrorOriginal & ~E_DEPRECATED);
+
+        try {
+            $phpWord = new \PhpOffice\PhpWord\PhpWord();
+            
+            // ⚠️ CORRECCIÓN APLICADA AQUÍ ⚠️
+            // Se ha ELIMINADO la línea: $phpWord->getSettings()->setUpdateFields(true);
+            // Razón: Esta línea provoca que Word muestre una alerta de seguridad al abrir el archivo, 
+            // ya que forza una actualización de campos. Word calculará PAGE y NUMPAGES automáticamente al renderizar.
+
+            $phpWord->setDefaultFontName('Calibri');
+            $phpWord->setDefaultFontSize(11);
+
+            $phpWord->addTableStyle('tablaReporte', [
+                'borderSize'  => 6,
+                'borderColor' => '30363d',
+                'cellMargin'  => 80,
+            ], [
+                'bgColor'     => '0f3460',
+                'color'       => 'FFFFFF',
+                'bold'        => true,
+                'size'        => 10,
+            ]);
+
+            // ── Sección principal ──
+            $seccion = $phpWord->addSection([
+                'pageSize'     => 'LETTER', 
+                'orientation'  => 'landscape',  
+                'marginTop'    => 1440,         
+                'marginBottom' => 1440, 
+                'marginLeft'   => 1440, 
+                'marginRight'  => 1440, 
+                'headerHeight' => 900,          
+                'footerHeight' => 600,          
+            ]);
+
+            // ── ENCABEZADO ──
+            $header = $seccion->addHeader();
+            $headerTable = $header->addTable();
+            $headerTable->addRow(500);
+
+            $headerTable->addCell(3000, ['bgColor' => '1a1a2e', 'valign' => 'center'])
+                ->addText('📒 Agenda MVC', ['color' => 'FFFFFF', 'bold' => true, 'size' => 14], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::START]);
+
+            $headerTable->addCell(7000, ['bgColor' => '0f3460', 'valign' => 'center'])
+                ->addText($titulo, ['color' => 'FFFFFF', 'bold' => true, 'size' => 13], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+
+            $headerTable->addCell(3000, ['bgColor' => '1a1a2e', 'valign' => 'center'])
+                ->addText(date('d/m/Y H:i'), ['color' => 'FFFFFF', 'size' => 10], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END]);
+
+            // ── PIE DE PÁGINA ──
+            $footer = $seccion->addFooter();
+            $footerTable = $footer->addTable();
+            $footerTable->addRow(300);
+
+            $footerTable->addCell(6000)->addText(
+                'Total de registros: ' . count($datos),
+                ['size' => 9, 'color' => '666666', 'italic' => true]
+            );
+
+            $celdaPagina = $footerTable->addCell(7000);
+            
+            $textRun = $celdaPagina->addTextRun([
+                'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::END
+            ]);
+            
+            // Estos campos se calcularán visualmente, sin necesidad de forzar actualización XML
+            $textRun->addText('Página ', ['size' => 9, 'color' => '666666']);
+            $textRun->addField('PAGE', []); 
+            $textRun->addText(' de ', ['size' => 9, 'color' => '666666']);
+            $textRun->addField('NUMPAGES', []);
+
+            // ── CUERPO ──
+            $seccion->addTextBreak(1); 
+            
+            $seccion->addText('Detalle de registros exportados', [
+                'size' => 11, 
+                'color' => '555555', 
+                'italic' => true
+            ]);
+            
+            $seccion->addTextBreak(1);
+
+            $anchoTotal  = 12960; 
+            $totalCols   = count($columnas);
+            $anchoCelda  = (int)($anchoTotal / $totalCols);
+
+            $tabla = $seccion->addTable('tablaReporte');
+
+            $tabla->addRow(400);
+            foreach ($columnas as $campo => $encabezado) {
+                $tabla->addCell($anchoCelda, ['bgColor' => '0f3460', 'valign' => 'center'])
+                    ->addText($encabezado, ['bold' => true, 'color' => 'FFFFFF', 'size' => 10], ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
+            }
+
+            $filaNum = 0;
+            foreach ($datos as $registro) {
+                $tabla->addRow(350);
+                $bgColor = ($filaNum % 2 === 0) ? 'FFFFFF' : 'f0f4f8';
+
+                foreach ($columnas as $campo => $encabezado) {
+                    $valor = self::formatearDato($campo, $registro[$campo] ?? '');
+                    if (strlen($valor) > 50) $valor = substr($valor, 0, 47) . '...';
+
+                    $tabla->addCell($anchoCelda, ['bgColor' => $bgColor, 'valign' => 'center'])->addText($valor, ['size' => 9, 'color' => '212529']);
+                }
+                $filaNum++;
+            }
+
+            // ── GUARDADO TEMPORAL ──
+            $tmpDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'tmp';
+            if (!is_dir($tmpDir)) {
+                mkdir($tmpDir, 0777, true);
+            }
+            $tempFile = $tmpDir . DIRECTORY_SEPARATOR . $archivo . '.docx';
+
+            $writer = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+            $writer->save($tempFile);
+
+        } catch (\Exception $e) {
+            // Si algo falla gravemente, restauramos los errores y matamos el proceso
+            error_reporting($nivelErrorOriginal);
+            die("Error crítico generando Word: " . $e->getMessage());
+        }
+
+        // RESTAURAMOS EL NIVEL DE ERROR ORIGINAL,el entorno vuelve a la normalidad estricta
+        error_reporting($nivelErrorOriginal);
+
+        // ── DESCARGA LIMPIA (Aquí no hay basura en pantalla) ──
+        if (file_exists($tempFile)) {
+            if (ob_get_level()) { ob_end_clean(); }
+            header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+            header('Content-Disposition: attachment; filename="' . $archivo . '.docx"');
+            header('Content-Length: ' . filesize($tempFile));
+            header('Cache-Control: max-age=0');
+            header('Pragma: public');
+            readfile($tempFile);
+            unlink($tempFile);
+        } else {
+            die("Error: No se encontró el archivo temporal.");
+        }
+        exit();
+    }//End function word
+
+    
+
+    /**
+     * IMAGEN — Exporta infografía con estadísticas a JPG (CON ACENTOS Y FUENTES TTF)
+     */
+    public static function imagen(array  $datos, array $columnas, array $stats, string $titulo, string $archivo): void 
+    {
+        $ancho     = 1200;
+        $margen    = 40;
+        $filasTabla = min(count($datos), 15); 
+        $altoHeader = 120;
+        $altoStats  = 130;
+        $altoTabla  = 40 + ($filasTabla * 30) + 40;
+        $altoFooter = 50;
+        $alto       = $altoHeader + $altoStats + $altoTabla + $altoFooter + 20;
+
+        $img = imagecreatetruecolor($ancho, $alto);
+        imageantialias($img, true);
+
+        // ── Paleta de colores ────────────────────────────────
+        $cBgBody    = self::hex2rgb($img, '#0d1117');
+        $cNavOsc    = self::hex2rgb($img, '#1a1a2e');
+        $cNavMed    = self::hex2rgb($img, '#0f3460');
+        $cBlanco    = self::hex2rgb($img, '#ffffff');
+        $cGrisOsc   = self::hex2rgb($img, '#161b22');
+        $cGrisMed   = self::hex2rgb($img, '#1c2128');
+        $cGrisClaro = self::hex2rgb($img, '#8b949e');
+        $cBorde     = self::hex2rgb($img, '#30363d');
+        $cAzul      = self::hex2rgb($img, '#0d6efd');
+        $cTexto     = self::hex2rgb($img, '#e6edf3');
+
+        // ── NUEVAS FUENTES TRUE TYPE (UTF-8 COMPLETO) ───────
+        // Usamos las fuentes nativas de Windows. Quedan increíbles y soportan todo.
+        $fuenteNegrita = 'C:\Windows\Fonts\arialbd.ttf';
+        $fuenteNormal  = 'C:\Windows\Fonts\arial.ttf';
+        
+        $sizeGrande = 20;
+        $sizeMedia  = 13;
+        $sizePeq    = 10;
+
+        imagefilledrectangle($img, 0, 0, $ancho, $alto, $cBgBody);
+        imagefilledrectangle($img, 0, 0, $ancho, $altoHeader, $cNavOsc);
+        imagefilledrectangle($img, 0, $altoHeader - 5, $ancho, $altoHeader, $cNavMed);
+        imagefilledrectangle($img, 0, 0, 8, $altoHeader, $cAzul);
+
+        // Título centrado (usando imagettfbbox para calcular el ancho exacto del texto)
+        $bbox = imagettfbbox($sizeGrande, 0, $fuenteNegrita, $titulo);
+        $anchoTexto = $bbox[2] - $bbox[0];
+        $xTitulo = ($ancho - $anchoTexto) / 2;
+        // Nota: Se le suma el tamaño de fuente a la Y porque TTF dibuja desde la línea base
+        imagettftext($img, $sizeGrande, 0, max(20, $xTitulo), 30 + $sizeGrande, $cBlanco, $fuenteNegrita, $titulo);
+
+        // Subtítulo
+        $subtitulo  = 'Agenda MVC  |  Generado: ' . date('d/m/Y H:i:s') . '  |  Total: ' . count($datos) . ' registros';
+        $bbox = imagettfbbox($sizePeq, 0, $fuenteNormal, $subtitulo);
+        $anchoSub = $bbox[2] - $bbox[0];
+        $xSub = ($ancho - $anchoSub) / 2;
+        imagettftext($img, $sizePeq, 0, max(20, $xSub), 70 + $sizePeq, $cGrisClaro, $fuenteNormal, $subtitulo);
+
+        // ═══════════════════════════════════════════════════
+        // SECCIÓN 2: TARJETAS DE ESTADÍSTICAS
+        // ═══════════════════════════════════════════════════
+        $yStats = $altoHeader + 15; 
+        $numStats = count($stats);
+        $anchoCard = (int)(($ancho - ($margen * 2) - (($numStats - 1) * 15)) / $numStats);
+        $xCard = $margen;
+
+        foreach ($stats as $stat) {
+            $colorCard = self::hex2rgb($img, $stat['color'] ?? '#0d6efd');
+            imagefilledrectangle($img, $xCard, $yStats, $xCard + $anchoCard, $yStats + 100, $cGrisOsc);
+            imagefilledrectangle($img, $xCard, $yStats, $xCard + $anchoCard, $yStats + 5, $colorCard);
+            imagerectangle($img, $xCard, $yStats, $xCard + $anchoCard, $yStats + 100, $cBorde);
+            
+            $valorStr = (string)$stat['valor'];
+            $bbox = imagettfbbox($sizeGrande, 0, $fuenteNegrita, $valorStr);
+            $anchoVal = $bbox[2] - $bbox[0];
+            $xVal = $xCard + ($anchoCard / 2) - ($anchoVal / 2);
+            imagettftext($img, $sizeGrande, 0, $xVal, $yStats + 25 + $sizeGrande, $colorCard, $fuenteNegrita, $valorStr);
+            
+            $label = $stat['label'];
+            $bbox = imagettfbbox($sizePeq, 0, $fuenteNormal, $label);
+            $anchoLabel = $bbox[2] - $bbox[0];
+            $xLabel = $xCard + ($anchoCard / 2) - ($anchoLabel / 2);
+            imagettftext($img, $sizePeq, 0, max($xCard + 5, $xLabel), $yStats + 70 + $sizePeq, $cTexto, $fuenteNormal, $label);
+            
+            imageline($img, $xCard + 10, $yStats + 60, $xCard + $anchoCard - 10, $yStats + 61, $cBorde);
+            $xCard += $anchoCard + 15;
+        }
+
+        // ═══════════════════════════════════════════════════
+        // SECCIÓN 3: TABLA DE DATOS
+        // ═══════════════════════════════════════════════════
+        $yTabla = $altoHeader + $altoStats; 
+        $totalCols = count($columnas);
+        $anchoCol = (int)(($ancho - ($margen * 2)) / $totalCols);
+        
+        $tituloSeccion = 'DETALLE DE REGISTROS';
+        imagettftext($img, $sizeMedia, 0, $margen, $yTabla + 15 + $sizeMedia, $cGrisClaro, $fuenteNegrita, $tituloSeccion);
+        $yTabla += 35;
+
+        // ── Fila de encabezados ──────────────────────────────
+        $xCol = $margen;
+        foreach ($columnas as $campo => $encabezado) {
+            imagefilledrectangle($img, $xCol, $yTabla, $xCol + $anchoCol, $yTabla + 30, $cNavMed);
+            imagerectangle($img, $xCol, $yTabla, $xCol + $anchoCol, $yTabla + 30, $cBorde);
+            
+            // Truncamos respetando caracteres (ahora con UTF-8 real usamos mb_substr)
+            $enc = mb_strlen($encabezado) > 10 ? mb_substr($encabezado, 0, 8) . '..' : $encabezado;
+            imagettftext($img, $sizePeq, 0, $xCol + 5, $yTabla + 10 + $sizePeq, $cBlanco, $fuenteNegrita, $enc);
+            $xCol += $anchoCol;
+        }
+        $yTabla += 30;
+
+        // ── Filas de datos ───────────────────────────────────
+        $filaNum = 0;
+        foreach (array_slice($datos, 0, $filasTabla) as $registro) {
+            $bgFila = ($filaNum % 2 === 0) ? $cGrisOsc : $cGrisMed; 
+            $xCol = $margen;
+            
+            foreach ($columnas as $campo => $encabezado) {
+                imagefilledrectangle($img, $xCol, $yTabla, $xCol + $anchoCol, $yTabla + 28, $bgFila);
+                imagerectangle($img, $xCol, $yTabla, $xCol + $anchoCol, $yTabla + 28, $cBorde);
+                
+                $val = self::formatearDato($campo, $registro[$campo] ?? '');
+                
+                // Truncado seguro para UTF-8
+                $maxChars = (int)($anchoCol / 6) - 1; // Aprox 6 pixeles por letra con Arial 10
+                if (mb_strlen($val) > $maxChars) {
+                    $val = mb_substr($val, 0, $maxChars - 2) + '..';
+                }
+                
+                imagettftext($img, $sizePeq, 0, $xCol + 5, $yTabla + 8 + $sizePeq, $cTexto, $fuenteNormal, $val);
+                $xCol += $anchoCol;
+            }
+            $yTabla += 28; 
+            $filaNum++;
+        }
+
+        if (count($datos) > $filasTabla) {
+            $nota = '... y ' . (count($datos) - $filasTabla) . ' registros más. Descarga Excel o PDF para ver todos.';
+            imagettftext($img, $sizePeq, 0, $margen, $yTabla + 8 + $sizePeq, $cGrisClaro, $fuenteNormal, $nota);
+        }
+
+        // ═══════════════════════════════════════════════════
+        // SECCIÓN 4: PIE DE PÁGINA
+        // ═══════════════════════════════════════════════════
+        $yFooter = $alto - $altoFooter;
+        imagefilledrectangle($img, 0, $yFooter, $ancho, $alto, $cNavOsc);
+        imagefilledrectangle($img, 0, $yFooter, $ancho, $yFooter + 3, $cAzul);
+        
+        $pieTexto = 'Agenda MVC  —  Reporte generado el ' . date('d/m/Y \a \l\a\s H:i:s');
+        $bbox = imagettfbbox($sizePeq, 0, $fuenteNormal, $pieTexto);
+        $anchoPie = $bbox[2] - $bbox[0];
+        $xPie = ($ancho - $anchoPie) / 2;
+        imagettftext($img, $sizePeq, 0, max(20, $xPie), $yFooter + 18 + $sizePeq, $cGrisClaro, $fuenteNormal, $pieTexto);
+
+        // ── ENVÍO 100% A PRUEBA DE FALLOS PARA WINDOWS APACHE ──
+        $tmpDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'tmp';
+        if (!is_dir($tmpDir)) {
+            mkdir($tmpDir, 0777, true);
+        }
+        $tempFile = $tmpDir . DIRECTORY_SEPARATOR . $archivo . '.jpg';
+
+        imagejpeg($img, $tempFile, 95);
+        imagedestroy($img);
+
+        if (file_exists($tempFile)) {
+            if (ob_get_level()) { ob_end_clean(); }
+            header('Content-Type: image/jpeg');
+            header('Content-Disposition: attachment; filename="' . $archivo . '.jpg"');
+            header('Content-Length: ' . filesize($tempFile));
+            header('Cache-Control: max-age=0');
+            header('Pragma: public');
+            readfile($tempFile);
+            unlink($tempFile);
+        } else {
+            die("Error crítico: No se pudo generar la imagen.");
+        }
+        exit();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    private static function hex2rgb($img, string $hex): int
+    {
+        $hex = ltrim($hex, '#');
+        $r   = hexdec(substr($hex, 0, 2));
+        $g   = hexdec(substr($hex, 2, 2));
+        $b   = hexdec(substr($hex, 4, 2));
+        return imagecolorallocate($img, $r, $g, $b);
+    }
+
 }

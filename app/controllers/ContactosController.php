@@ -422,4 +422,102 @@ class ContactosController extends Controller
         );
     }    
 
+    //Para reportes WORD e Imagen 28/04/26
+    // ─────────────────────────────────────────────────────────
+    /**
+     * EXPORTAR WORD — Todos los contactos
+     * URL: GET /contactos/exportarword
+     */
+    public function exportarword(): void
+    {
+        $contactos = $this->contactoModel->getAll();
+
+        Exportador::word(
+            $contactos,
+            [
+                'apellido'        => 'Apellido',
+                'nombre'          => 'Nombre',
+                'alias'           => 'Alias',
+                'email'           => 'Email',
+                'categoria'       => 'Categoría',
+                'total_telefonos' => 'Teléfonos',
+                'fecha_alta'      => 'Fecha Alta',
+            ],
+            'Listado de Contactos — Agenda MVC',
+            'contactos_' . date('Ymd_His')
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * EXPORTAR IMAGEN — Infografía de contactos
+     * URL: GET /contactos/exportarimagen
+     */
+    public function exportarimagen(): void
+    {
+        $contactos  = $this->contactoModel->getAll();
+        $categorias = $this->categoriaModel->getAll();
+
+        // ── Calcular estadísticas para las tarjetas ──────────
+        $totalContactos = count($contactos);
+
+        // Contar por categoría
+        $porCategoria = [];
+        foreach ($contactos as $c) {
+            $cat = $c['categoria'] ?? 'Sin categoría';
+            $porCategoria[$cat] = ($porCategoria[$cat] ?? 0) + 1;
+        }
+        arsort($porCategoria);
+        $topCategoria = array_key_first($porCategoria) ?? '—';
+
+        // Contar con email
+        $conEmail = count(array_filter($contactos, fn($c) => !empty($c['email'])));
+
+        // Total de teléfonos
+        $totalTels = array_sum(array_column($contactos, 'total_telefonos'));
+
+        $stats = [
+            [
+                'label' => 'Total Contactos',
+                'valor' => $totalContactos,
+                'color' => '#0d6efd'
+            ],
+            [
+                'label' => 'Con Email',
+                'valor' => $conEmail,
+                'color' => '#28a745'
+            ],
+            [
+                'label' => 'Total Teléfonos',
+                'valor' => $totalTels,
+                'color' => '#17a2b8'
+            ],
+            [
+                'label' => 'Categorías',
+                'valor' => count($categorias),
+                'color' => '#6f42c1'
+            ],
+            [
+                'label' => 'Top: ' . substr($topCategoria, 0, 10),
+                'valor' => $porCategoria[$topCategoria] ?? 0,
+                'color' => '#ffc107'
+            ],
+        ];
+
+        Exportador::imagen(
+            $contactos,
+            [
+                'apellido'        => 'Apellido',
+                'nombre'          => 'Nombre',
+                'email'           => 'Email',
+                'categoria'       => 'Categoría',
+                'total_telefonos' => 'Teléfonos',
+                'fecha_alta'      => 'Fecha Alta',
+            ],
+            $stats,
+            'Infografía Contactos — Agenda MVC',
+            'contactos_infografia_' . date('Ymd_His')
+        );
+    }
+
 }

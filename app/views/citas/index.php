@@ -50,6 +50,20 @@ $iconosTipo = [
             <i class="bi bi-file-earmark-pdf me-1"></i>PDF
         </a>
 
+        <!-- Exportar Word -->
+        <a href="<?= BASE_URL ?>/citas/exportarword"
+        class="btn btn-primary btn-sm"
+        title="Descargar en Word">
+            <i class="bi bi-file-earmark-word me-1"></i>Word
+        </a>
+
+        <!-- Exportar Imagen -->
+        <a href="<?= BASE_URL ?>/citas/exportarimagen"
+        class="btn btn-info btn-sm"
+        title="Descargar Infografía JPG">
+            <i class="bi bi-file-earmark-image me-1"></i>Imagen
+        </a>
+
         <!-- Nueva Cita -->
         <a href="<?= BASE_URL ?>/citas/crear"
            class="btn btn-primary btn-sm">
