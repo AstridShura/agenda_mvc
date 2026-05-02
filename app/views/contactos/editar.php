@@ -135,6 +135,90 @@
                 <?php endif; ?>
             </div>
 
+            <!-- 30/04/26 Para Geolocalizacion -->
+            <!-- ── Ubicación en el mapa ───────────────────────────── -->
+            <hr>
+            <h6 class="fw-semibold mb-3">
+                <i class="bi bi-geo-alt-fill me-2 text-danger"></i>
+                Ubicación en el mapa
+                <small class="text-muted fw-normal ms-2">(opcional)</small>
+            </h6>
+
+            <!-- Buscador de dirección -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Buscar dirección
+                </label>
+                <div class="input-group">
+                    <input  type="text"
+                            id="buscadorDireccion"
+                            class="form-control"
+                            placeholder="Ej: Av. Arce, La Paz, Bolivia">
+                    <button type="button"
+                            class="btn btn-outline-primary"
+                            id="btnBuscarDir">
+                        <i class="bi bi-search me-1"></i>Buscar
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-danger"
+                            id="btnLimpiarUbic"
+                            title="Quitar ubicación">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <small class="text-muted">
+                    Busca por dirección o haz clic directamente en el mapa.
+                </small>
+            </div>
+
+            <!-- Coordenadas (ocultas — se llenan automáticamente) -->
+            <input type="hidden" name="latitud"  id="inputLatitud"
+                value="<?= htmlspecialchars(
+                    isset($contacto)
+                        ? ($contacto['latitud']  ?? '')
+                        : ($datos['latitud']     ?? '')
+                ) ?>">
+            <input type="hidden" name="longitud" id="inputLongitud"
+                value="<?= htmlspecialchars(
+                    isset($contacto)
+                        ? ($contacto['longitud'] ?? '')
+                        : ($datos['longitud']    ?? '')
+                ) ?>">
+
+            <!-- Display de coordenadas actuales -->
+            <div id="coordsDisplay" class="mb-3"
+                style="<?= (isset($contacto) && $contacto['latitud'])
+                            || (isset($datos) && !empty($datos['latitud']))
+                            ? '' : 'display:none' ?>">
+                <span class="badge bg-success">
+                    <i class="bi bi-geo-alt me-1"></i>
+                    Lat: <span id="dispLat">
+                        <?= isset($contacto)
+                            ? ($contacto['latitud']  ?? '')
+                            : ($datos['latitud']     ?? '') ?>
+                    </span>
+                    | Lng: <span id="dispLng">
+                        <?= isset($contacto)
+                            ? ($contacto['longitud'] ?? '')
+                            : ($datos['longitud']    ?? '') ?>
+                    </span>
+                </span>
+            </div>
+
+            <!-- Mapa Leaflet -->
+            <div id="mapaSelector"
+                style="height:350px;
+                        border-radius:8px;
+                        border:1px solid var(--border-color);
+                        z-index:1;">
+            </div>
+            <small class="text-muted d-block mt-1">
+                <i class="bi bi-info-circle me-1"></i>
+                Haz clic en el mapa para marcar la ubicación exacta.
+                El marcador se puede arrastrar para ajustar.
+            </small>
+            <!-- fin Geolocalizacion -->
+            
             <hr class="mt-4">
             <div class="d-flex justify-content-end gap-2">
                 <a href="<?= BASE_URL ?>/contactos/ver/<?= $contacto['id'] ?>"

@@ -102,6 +102,7 @@
                         </li>
                     <?php endforeach; ?>
                     </ul>
+
                 <?php endif; ?>
             </div>
         </div>
@@ -117,3 +118,29 @@
         <i class="bi bi-trash me-1"></i>Eliminar Contacto
     </a>
 </div>
+
+
+<!-- ── 30/04/26 Mapa del contacto ──────────────────────────────── -->
+<?php if ($contacto['latitud'] && $contacto['longitud']): ?>
+<div class="col-12 mt-3">
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="bi bi-geo-alt-fill me-2 text-danger"></i>
+                Ubicación
+            </h6>
+        </div>
+        <div class="card-body p-0">
+            <div id="mapaContacto" style="height:300px; z-index:1"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+var latContacto = <?= $contacto['latitud'] ?>;
+var lngContacto = <?= $contacto['longitud'] ?>;
+var nomContacto = '<?= htmlspecialchars(
+    $contacto['nombre'] . ' ' . $contacto['apellido']
+) ?>';
+</script>
+<?php endif; ?>

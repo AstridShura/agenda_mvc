@@ -703,6 +703,74 @@ $temaActual = $_SESSION['usuario_tema'] ?? 'claro';
         50%       { opacity: .5; }
     }
 
+    /* ══════════════════════════════════════════════════
+       LEAFLET — Aislar popups y controles del tema oscuro
+       Los popups de Leaflet usan divs propios que heredan
+       el color del tema y se vuelven ilegibles.
+       Forzamos siempre fondo blanco/texto oscuro en ellos.
+       30/04/26
+    ══════════════════════════════════════════════════ */
+
+    /* Popup — fondo y texto siempre claros */
+    .leaflet-popup-content-wrapper,
+    .leaflet-popup-tip {
+        background-color : #ffffff !important;
+        color            : #212529 !important;
+        box-shadow       : 0 3px 14px rgba(0,0,0,0.4) !important;
+    }
+
+    .leaflet-popup-content {
+        color            : #212529 !important;
+    }
+
+    /* Links dentro del popup */
+    .leaflet-popup-content a {
+        color            : #0d6efd !important;
+    }
+
+    /* Botón cerrar popup */
+    .leaflet-popup-close-button {
+        color            : #666 !important;
+    }
+
+    .leaflet-popup-close-button:hover {
+        color            : #000 !important;
+    }
+
+    /* Controles de zoom — siempre con fondo claro */
+    .leaflet-control-zoom a {
+        background-color : #ffffff !important;
+        color            : #333333 !important;
+        border-color     : #ccc    !important;
+    }
+
+    .leaflet-control-zoom a:hover {
+        background-color : #f4f4f4 !important;
+    }
+
+    /* Barra de atribución OpenStreetMap */
+    .leaflet-control-attribution {
+        background-color : rgba(255,255,255,0.85) !important;
+        color            : #333333 !important;
+    }
+
+    .leaflet-control-attribution a {
+        color            : #0078a8 !important;
+    }
+
+    /* Contenedor del mapa — anular herencia de color del tema */
+    .leaflet-container {
+        background-color : #f0f0f0 !important;
+        color            : #212529 !important;
+    }
+
+    /* Tooltip de Leaflet */
+    .leaflet-tooltip {
+        background-color : #ffffff !important;
+        color            : #212529 !important;
+        border-color     : #ccc    !important;
+    }
+
     </style>
 
     <!-- Agregado para Citas -->
@@ -710,20 +778,27 @@ $temaActual = $_SESSION['usuario_tema'] ?? 'claro';
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <!-- TomSelect — buscador de contactos en select -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css">
-    <!-- FullCalendar -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css">
-<!-- Flatpickr JS -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <!-- FullCalendar CSS — corregido 30/04/26 (evita NS_ERROR_CORRUPTED_CONTENT en Firefox) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.10/main.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.10/main.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.10/main.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fullcalendar/list@6.1.10/main.min.css">
 
-<!-- TomSelect JS -->
-<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
-<!-- FullCalendar JS -->
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <!-- TomSelect JS -->
+    <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
 
-<!-- SortableJS — Drag & Drop (Arrastrar y Soltar) 29/04/26 -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+    <!-- SortableJS — Drag & Drop (Arrastrar y Soltar) 29/04/26 -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+    <!-- Leaflet CSS Para 30/04/26Geolocalización-->
+    <link rel="stylesheet"  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 </head>
 <body>
@@ -798,6 +873,10 @@ $temaActual = $_SESSION['usuario_tema'] ?? 'claro';
                 <!-- Botón Nuevo Contacto -->
                 <a class="nav-link text-white" href="<?= BASE_URL ?>/contactos/crear">
                     <i class="bi bi-person-plus me-1"></i>Nuevo
+                </a>
+                <!-- 30/04/26 Para Mapas -->
+                <a class="nav-link text-white" href="<?= BASE_URL ?>/contactos/mapa">
+                    <i class="bi bi-geo-alt me-1"></i>Mapa
                 </a>
 
                 <!-- Logout -->
@@ -1754,6 +1833,410 @@ document.addEventListener('DOMContentLoaded', function () {
 
     })();
     </script>
+
     
+    <!-- 30/04/26 Para Geolocalización-->    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- ── Leaflet: Mapa selector en crear/editar ─────────── -->
+    <script>
+    (function () {
+
+        // Solo ejecutar si existe el mapa selector
+        var contenedor = document.getElementById('mapaSelector');
+        if (!contenedor) return;
+
+        // ── Centro inicial: Latinoamérica ────────────────────
+        var latInicial = -16.5000;  // Bolivia/Latinoamérica
+        var lngInicial = -64.0000;
+        var zoomInicial = 5;
+
+        // Si ya tiene coordenadas → centrar en ellas
+        var latGuardada = document.getElementById('inputLatitud').value;
+        var lngGuardada = document.getElementById('inputLongitud').value;
+
+        if (latGuardada && lngGuardada) {
+            latInicial  = parseFloat(latGuardada);
+            lngInicial  = parseFloat(lngGuardada);
+            zoomInicial = 15;
+        }
+
+        // ── Inicializar mapa ─────────────────────────────────
+        var mapa = L.map('mapaSelector').setView(
+            [latInicial, lngInicial],
+            zoomInicial
+        );
+
+        // Tiles OpenStreetMap (gratuito)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution : '© <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
+            maxZoom     : 19
+        }).addTo(mapa);
+
+        // ── Marcador arrastrable ─────────────────────────────
+        var marcador = null;
+
+        // Si ya tiene coordenadas → mostrar marcador
+        if (latGuardada && lngGuardada) {
+            marcador = L.marker(
+                [parseFloat(latGuardada), parseFloat(lngGuardada)],
+                { draggable: true }
+            ).addTo(mapa);
+
+            marcador.on('dragend', function () {
+                var pos = marcador.getLatLng();
+                actualizarCoordenadas(pos.lat, pos.lng);
+            });
+        }
+
+        // ── Clic en el mapa → colocar/mover marcador ─────────
+        mapa.on('click', function (e) {
+            var lat = e.latlng.lat;
+            var lng = e.latlng.lng;
+
+            if (marcador) {
+                marcador.setLatLng([lat, lng]);
+            } else {
+                marcador = L.marker([lat, lng], { draggable: true })
+                            .addTo(mapa);
+
+                marcador.on('dragend', function () {
+                    var pos = marcador.getLatLng();
+                    actualizarCoordenadas(pos.lat, pos.lng);
+                });
+            }
+
+            actualizarCoordenadas(lat, lng);
+        });
+
+        // ── Buscador de dirección via Nominatim ──────────────
+        var btnBuscar = document.getElementById('btnBuscarDir');
+        var inputDir  = document.getElementById('buscadorDireccion');
+
+        if (btnBuscar && inputDir) {
+            btnBuscar.addEventListener('click', function () {
+                var query = inputDir.value.trim();
+                if (!query) return;
+
+                btnBuscar.innerHTML =
+                    '<span class="spinner-border spinner-border-sm"></span>';
+                btnBuscar.disabled = true;
+
+                // Nominatim — geocoding gratuito de OpenStreetMap
+                fetch('https://nominatim.openstreetmap.org/search' +
+                    '?format=json&limit=1&q=' +
+                    encodeURIComponent(query), {
+                    headers: {
+                        'Accept-Language': 'es',
+                        'User-Agent'      : 'AgendaMVC/1.0'
+                    }
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    btnBuscar.innerHTML = '<i class="bi bi-search me-1"></i>Buscar';
+                    btnBuscar.disabled  = false;
+
+                    if (data.length === 0) {
+                        alert('No se encontró la dirección. Intenta con más detalle.');
+                        return;
+                    }
+
+                    var lat = parseFloat(data[0].lat);
+                    var lng = parseFloat(data[0].lon);
+
+                    // Mover mapa y colocar marcador
+                    mapa.setView([lat, lng], 16);
+
+                    if (marcador) {
+                        marcador.setLatLng([lat, lng]);
+                    } else {
+                        marcador = L.marker([lat, lng], { draggable: true })
+                                    .addTo(mapa);
+
+                        marcador.on('dragend', function () {
+                            var pos = marcador.getLatLng();
+                            actualizarCoordenadas(pos.lat, pos.lng);
+                        });
+                    }
+
+                    actualizarCoordenadas(lat, lng);
+
+                    // Mostrar popup con la dirección encontrada
+                    marcador.bindPopup(
+                        '<strong>' + data[0].display_name + '</strong>'
+                    ).openPopup();
+                })
+                .catch(function () {
+                    btnBuscar.innerHTML = '<i class="bi bi-search me-1"></i>Buscar';
+                    btnBuscar.disabled  = false;
+                    alert('Error al buscar. Verifica tu conexión a internet.');
+                });
+            });
+
+            // Buscar también al presionar Enter
+            inputDir.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    btnBuscar.click();
+                }
+            });
+        }
+
+        // ── Limpiar ubicación ────────────────────────────────
+        var btnLimpiar = document.getElementById('btnLimpiarUbic');
+        if (btnLimpiar) {
+            btnLimpiar.addEventListener('click', function () {
+                if (marcador) {
+                    mapa.removeLayer(marcador);
+                    marcador = null;
+                }
+                document.getElementById('inputLatitud').value  = '';
+                document.getElementById('inputLongitud').value = '';
+
+                var display = document.getElementById('coordsDisplay');
+                if (display) display.style.display = 'none';
+            });
+        }
+
+        // ── Actualizar inputs ocultos y display ──────────────
+        function actualizarCoordenadas(lat, lng) {
+            var latR = lat.toFixed(8);
+            var lngR = lng.toFixed(8);
+
+            document.getElementById('inputLatitud').value  = latR;
+            document.getElementById('inputLongitud').value = lngR;
+
+            var dispLat = document.getElementById('dispLat');
+            var dispLng = document.getElementById('dispLng');
+            var display = document.getElementById('coordsDisplay');
+
+            if (dispLat) dispLat.textContent = latR;
+            if (dispLng) dispLng.textContent = lngR;
+            if (display) display.style.display = 'block';
+        }
+
+        // ── Forzar redibujado del mapa ───────────────────────
+        // Necesario cuando el mapa está dentro de una card
+        setTimeout(function () {
+            mapa.invalidateSize();
+        }, 100);
+
+    })();
+    </script>
+
+    <!-- ── Leaflet: Mapa general de contactos ─────────────── -->
+    <script>
+    (function () {
+
+        // Solo ejecutar en la página del mapa general
+        var contenedor = document.getElementById('mapaGeneral');
+        if (!contenedor || typeof contactosMapa === 'undefined') return;
+
+        // ── Inicializar mapa centrado en Latinoamérica ───────
+        var mapa = L.map('mapaGeneral').setView([-15, -65], 4);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution : '© <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
+            maxZoom     : 19
+        }).addTo(mapa);
+
+        // ── Crear marcadores para cada contacto ──────────────
+        var marcadores   = [];
+        var grupoMarc    = L.featureGroup().addTo(mapa);
+
+        contactosMapa.forEach(function (c) {
+            if (!c.latitud || !c.longitud) return;
+
+            // Color del marcador según categoría
+            var color = c.categoria_color || '#0d6efd';
+
+            // Ícono personalizado con color de categoría
+            var icono = L.divIcon({
+                className : 'marcador-contacto',
+                html      :
+                    '<div style="' +
+                        'background:' + color + ';' +
+                        'width:28px; height:28px;' +
+                        'border-radius:50% 50% 50% 0;' +
+                        'transform:rotate(-45deg);' +
+                        'border:3px solid white;' +
+                        'box-shadow:0 2px 8px rgba(0,0,0,0.3)' +
+                    '"></div>',
+                iconSize    : [28, 28],
+                iconAnchor  : [14, 28],
+                popupAnchor : [0, -30],
+            });
+
+            // Popup con info del contacto
+            var popupHTML =
+                '<div style="min-width:180px">' +
+                '<strong style="font-size:1rem">' +
+                    escH(c.apellido) + ', ' + escH(c.nombre) +
+                '</strong>';
+
+            if (c.alias) {
+                popupHTML += '<br><small class="text-muted">(' +
+                            escH(c.alias) + ')</small>';
+            }
+
+            if (c.categoria) {
+                popupHTML +=
+                    '<br><span style="' +
+                        'background:' + color + ';' +
+                        'color:white;' +
+                        'padding:2px 8px;' +
+                        'border-radius:10px;' +
+                        'font-size:.75rem;' +
+                        'display:inline-block;' +
+                        'margin-top:4px' +
+                    '">' + escH(c.categoria) + '</span>';
+            }
+
+            if (c.email) {
+                popupHTML += '<br><small>📧 ' + escH(c.email) + '</small>';
+            }
+
+            if (c.direccion) {
+                popupHTML += '<br><small>📍 ' +
+                    escH(c.direccion.substring(0, 50)) +
+                    (c.direccion.length > 50 ? '...' : '') +
+                    '</small>';
+            }
+
+            popupHTML +=
+                '<br><div style="margin-top:8px">' +
+                '<a href="' + baseUrl + '/contactos/ver/' + c.id + '" ' +
+                'style="' +
+                        'background:#0d6efd;color:white;' +
+                        'padding:4px 12px;border-radius:4px;' +
+                        'text-decoration:none;font-size:.8rem' +
+                '">' +
+                '👁 Ver detalle' +
+                '</a>' +
+                '</div></div>';
+
+            var marcador = L.marker(
+                [parseFloat(c.latitud), parseFloat(c.longitud)],
+                { icon: icono }
+            )
+            .bindPopup(popupHTML, { maxWidth: 250 });
+
+            grupoMarc.addLayer(marcador);
+
+            marcadores.push({
+                id       : c.id,
+                marcador : marcador,
+                cat      : c.categoria || '',
+            });
+        });
+
+        // Ajustar zoom para mostrar todos los marcadores
+        if (marcadores.length > 0) {
+            mapa.fitBounds(grupoMarc.getBounds().pad(0.1));
+        }
+
+        // ── Clic en lista lateral → centrar en marcador ──────
+        var items = document.querySelectorAll('.item-contacto-mapa');
+        items.forEach(function (item) {
+            item.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                var lat = parseFloat(item.getAttribute('data-lat'));
+                var lng = parseFloat(item.getAttribute('data-lng'));
+
+                mapa.setView([lat, lng], 16);
+
+                // Abrir popup del marcador correspondiente
+                var id = parseInt(item.getAttribute('data-id'));
+                marcadores.forEach(function (m) {
+                    if (m.id === id) {
+                        m.marcador.openPopup();
+                    }
+                });
+
+                // Resaltar item en la lista
+                items.forEach(function (i) {
+                    i.classList.remove('active');
+                });
+                item.classList.add('active');
+            });
+        });
+
+        // ── Filtro por categoría ─────────────────────────────
+        var filtroCat = document.getElementById('filtroCat');
+        if (filtroCat) {
+            filtroCat.addEventListener('change', function () {
+                var catSelec = this.value;
+
+                marcadores.forEach(function (m) {
+                    if (!catSelec || m.cat === catSelec) {
+                        grupoMarc.addLayer(m.marcador);
+                    } else {
+                        grupoMarc.removeLayer(m.marcador);
+                    }
+                });
+
+                // Filtrar lista lateral
+                items.forEach(function (item) {
+                    var catItem = item.getAttribute('data-cat');
+                    item.style.display =
+                        (!catSelec || catItem === catSelec) ? '' : 'none';
+                });
+            });
+        }
+
+        // ── Helper escape HTML ───────────────────────────────
+        function escH(s) {
+            if (!s) return '';
+            return String(s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+    })();
+    </script>
+    <!-- Fin Geolocalización-->
+
+    <!-- 30/04/26 Para Mapas -->
+    <!-- ── Leaflet: Mapa individual de contacto ───────────── -->
+    <script>
+    (function () {
+        var contenedor = document.getElementById('mapaContacto');
+        if (!contenedor ||
+            typeof latContacto === 'undefined') return;
+
+        // ── Fix iconos Leaflet desde CDN unpkg ───────────────
+        // Sin esto, el marcador por defecto no encuentra sus
+        // imágenes porque Leaflet busca en rutas relativas.
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl : 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+            iconUrl       : 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            shadowUrl     : 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        });
+
+        // ── Inicializar mapa ─────────────────────────────────
+        var mapa = L.map('mapaContacto').setView(
+            [latContacto, lngContacto], 15
+        );
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution : '© OpenStreetMap',
+            maxZoom     : 19
+        }).addTo(mapa);
+
+        // Marcador con popup
+        L.marker([latContacto, lngContacto])
+        .addTo(mapa)
+        .bindPopup('<strong>' + nomContacto + '</strong>')
+        .openPopup();
+
+        setTimeout(function () {
+            mapa.invalidateSize();
+        }, 100);
+    })();
+    </script>    
+    <!-- fin mapas -->
 </body>
 </HTML>

@@ -67,16 +67,18 @@ class Contacto extends Model
     public function crear(array $datos): int
     {
         $sql = "INSERT INTO {$this->tabla}
-                    (nombre, apellido, email, direccion, alias, id_categoria)
-                VALUES (?, ?, ?, ?, ?, ?)";
+                    (nombre, apellido, email, direccion, alias, id_categoria, latitud, longitud)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         $this->db->query($sql, [
             $datos['nombre'],
             $datos['apellido'],
             $datos['email'],
             $datos['direccion'],
-            $datos['alias'],
-            $datos['id_categoria'] ?: null
+            $datos['alias']        ?: null,
+            $datos['id_categoria'] ?: null,
+            $datos['latitud']      ?: null,
+            $datos['longitud']     ?: null,
         ]);
 
         return (int) $this->db->lastInsertId();
@@ -94,7 +96,9 @@ class Contacto extends Model
                     email        = ?,
                     direccion    = ?,
                     alias        = ?,
-                    id_categoria = ?
+                    id_categoria = ?,
+                    latitud      = ?,
+                    longitud     = ?
                 WHERE id = ?";
 
         $this->db->query($sql, [
@@ -102,8 +106,10 @@ class Contacto extends Model
             $datos['apellido'],
             $datos['email'],
             $datos['direccion'],
-            $datos['alias'],
+            $datos['alias']        ?: null,
             $datos['id_categoria'] ?: null,
+            $datos['latitud']      ?: null,
+            $datos['longitud']     ?: null,
             $id
         ]);
     }
@@ -223,4 +229,54 @@ class Contacto extends Model
         // Los valores van directamente en la query como enteros
         return $this->db->query($sql)->fetchAll();
     }
+
+// 30/04/26 Para Geolocalizacion de Citas
+/**
+ * Guarda las coordenadas de un contacto.
+ * Se llama desde el formulario crear/editar
+ * cuando el usuario marca una ubicación en el mapa.
+ *
+ * @param int        $id       ID del contacto
+ * @param float|null $latitud  Latitud decimal
+ * @param float|null $longitud Longitud decimal
+ */
+public function guardarUbicacion(int $id, ?float $latitud, ?float $longitud): void 
+{
+    $this->db->query(
+        "UPDATE {$this->tabla}
+         SET latitud  = ?,
+             longitud = ?
+         WHERE id = ?",
+        [$latitud, $longitud, $id]
+    );
+}
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * Retorna todos los contactos que tienen
+     * coordenadas asignadas.
+     * Usado para el mapa general con todos los marcadores.
+     */
+    public function getConUbicacion(): array
+    {
+        $sql = "SELECT
+                    c.id,
+                    c.nombre,
+                    c.apellido,
+                    c.alias,
+                    c.email,
+                    c.direccion,
+                    c.latitud,
+                    c.longitud,
+                    cat.nombre AS categoria,
+                    cat.color  AS categoria_color
+                FROM {$this->tabla} c
+                LEFT JOIN categorias cat ON c.id_categoria = cat.id
+                WHERE c.latitud  IS NOT NULL
+                AND c.longitud IS NOT NULL
+                ORDER BY c.apellido, c.nombre";
+
+        return $this->db->query($sql)->fetchAll();
+    }
+
 }

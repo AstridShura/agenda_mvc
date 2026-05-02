@@ -41,6 +41,11 @@
            class="btn btn-primary btn-sm">
             <i class="bi bi-person-plus me-1"></i>Nuevo Contacto
         </a>
+        
+        <!-- 30/04/26 Para Mapas -->
+        <a href="<?= BASE_URL ?>/contactos/mapa" class="btn btn-outline-danger btn-sm" title="Ver mapa de contactos">    
+            <i class="bi bi-geo-alt me-1"></i>Mapa
+        </a>
 
     </div>
 </div>

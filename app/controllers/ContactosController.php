@@ -140,7 +140,10 @@ class ContactosController extends Controller
                 'alias'        => trim($_POST['alias']        ?? ''),
                 'email'        => trim($_POST['email']        ?? ''),
                 'direccion'    => trim($_POST['direccion']    ?? ''),
-                'id_categoria' => $_POST['id_categoria']      ?? null
+                'id_categoria' => $_POST['id_categoria']      ?? null,
+                // Coordenadas del mapa — pueden ser null si no se marcó
+                'latitud'      => !empty($_POST['latitud']) ? (float)$_POST['latitud']  : null,
+                'longitud'     => !empty($_POST['longitud']) ? (float)$_POST['longitud'] : null,
             ];
 
             // ── 2. Validar campos obligatorios ──────────────
@@ -233,7 +236,10 @@ class ContactosController extends Controller
                 'alias'        => trim($_POST['alias']        ?? ''),
                 'email'        => trim($_POST['email']        ?? ''),
                 'direccion'    => trim($_POST['direccion']    ?? ''),
-                'id_categoria' => $_POST['id_categoria']      ?? null
+                'id_categoria' => $_POST['id_categoria']      ?? null,
+                // Coordenadas del mapa — pueden ser null si no se marcó
+                'latitud'      => !empty($_POST['latitud']) ? (float)$_POST['latitud']  : null,
+                'longitud'     => !empty($_POST['longitud']) ? (float)$_POST['longitud'] : null,                
             ];
 
             // ── 2. Validar ──────────────────────────────────
@@ -518,6 +524,46 @@ class ContactosController extends Controller
             'Infografía Contactos — Agenda MVC',
             'contactos_infografia_' . date('Ymd_His')
         );
+    }
+
+    
+    //30/04/26 Para Geolocalizacion
+    // ─────────────────────────────────────────────────────────
+    /**
+     * MAPA — Vista de todos los contactos en un mapa
+     * URL: GET /contactos/mapa
+     *
+     * Muestra un mapa Leaflet con marcadores
+     * de todos los contactos que tienen coordenadas.
+     */
+    public function mapa(): void
+    {
+        $contactos = $this->contactoModel->getConUbicacion();
+
+        $this->view('contactos/mapa', [
+            'titulo'     => 'Mapa de Contactos',
+            'contactos'  => $contactos,
+            'total'      => count($contactos),
+            'totalGeneral' => $this->contactoModel->contarTodos(),
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    /**
+     * UBICACIONES — Endpoint AJAX para el mapa general
+     * URL: GET /contactos/ubicaciones
+     *
+     * Retorna JSON con todos los contactos
+     * que tienen coordenadas asignadas.
+     * Usado por Leaflet para cargar los marcadores.
+     */
+    public function ubicaciones(): void
+    {
+        $contactos = $this->contactoModel->getConUbicacion();
+
+        header('Content-Type: application/json');
+        echo json_encode($contactos);
+        exit();
     }
 
 }
